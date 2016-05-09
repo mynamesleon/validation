@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .validation-failed { border-color: red; }
+        </style>
+    </head>
+    <body>
+
+        <form data-validation="true">
+
+            <input type="text" name="text-number" data-validation="number min:4 max:20" />
+
+            <input type="text" name="text-length" data-validation="minlength:5 maxlength:200" />
+
+            <input type="text" name="text-required-length" data-validation="required minlength:5 maxlength:200" />
+
+            <input type="email" name="email" data-validation="required email" />
+
+            <input type="radio" id="radio1" name="radio" value="1" data-validation="required" />
+            <input type="radio" id="radio2" name="radio" value="2" data-validation="required" />
+
+            <input type="checkbox" name="checkboxes.nest.checkbox1" value="something" data-validation="required" />
+            <input type="checkbox" name="checkboxes.checkbox2" data-validation="required" />
+
+            <select name="dropdown" data-validation="required">
+                <option value="-1">dropdown</option>
+                <option value="something">something</option>
+                <option value="something else">something else</option>
+            </select>
+
+            <input type="submit" value="submit" />
+
+        </form>
+
+        <script src="jquery.min.js"></script>
+        <script src="validate.js"></script>
+    </body>
+</html>
