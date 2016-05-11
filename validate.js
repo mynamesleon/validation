@@ -4,7 +4,17 @@ window.validation = window.validation || (function ($) {
     var rules = {},
         app = {};
 
+    /*
+     * all validation rules, called in element context - arguments that apply to each are:
+     * @param val {string}: input value
+     * @param misc {string} optional: additional provided value from validation rule - e.g. from min:5, this would be '5'
+     * @return {boolean}
+     */
     rules = {
+
+        required: function (val) {
+            return app.required.call(this, val);
+        },
 
         alpha: function (val) {
             return (/^[a-zA-Z\s]+$/).test(val);
@@ -16,11 +26,11 @@ window.validation = window.validation || (function ($) {
         },
 
         min: function (val, min) {
-            return parseFloat(val) >= parseInt(min, 10);
+            return parseFloat(val) >= parseFloat(min, 10);
         },
 
         max: function (val, max) {
-            return parseFloat(val) <= parseInt(max, 10);
+            return parseFloat(val) <= parseFloat(max, 10);
         },
 
         match: function (val, match) {
@@ -28,10 +38,12 @@ window.validation = window.validation || (function ($) {
         },
 
         minlength: function (val, min) {
+            // todo: handle minlength for radios and checkboxes
             return val.length >= parseInt(min, 10);
         },
 
         maxlength: function (val, max) {
+            // todo: handle maxlength for radios and checkboxes
             return val.length <= parseInt(max, 10);
         },
 
@@ -48,10 +60,6 @@ window.validation = window.validation || (function ($) {
 
         },
 
-        required: function (val) {
-            return val !== '' && val !== -1 && val !== null;
-        },
-
         confirm: function (val, selector) {
             return val === $(selector).val();
         },
@@ -66,28 +74,11 @@ window.validation = window.validation || (function ($) {
 
         // https://gist.github.com/dperini/729294
         url: function (val) {
-            (/^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,}))\.?)(?::\d{2,5})?(?:[\/?#]\S*)?$/i).test(val);
+            return (/^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,}))\.?)(?::\d{2,5})?(?:[\/?#]\S*)?$/i).test(val);
         }
     };
 
     app = {
-
-        /*
-         * genererate full string of error classes based on an array of srings
-         * @param a {array}
-         * @return {string}
-         */
-        ruleClasses: function (a) {
-            var i = 0,
-                result = [],
-                length = a.length;
-
-            for (i = 0; i < length; i += 1) {
-                result.push('failed-' + a[i].split(':')[0]);
-            }
-
-            return result.join(' ');
-        },
 
         /*
          * get data from all inputs in the form
@@ -95,16 +86,14 @@ window.validation = window.validation || (function ($) {
          * @param attribute {string} optional: attribute to use - defaults to name
          */
         getFormData: function ($form, attribute) {
-            var data,
-                $inputs;
+            var $inputs = $form.find('input, select, textarea').not('[type="submit"]'),
+                data = {};
 
             if (typeof $form !== 'object') {
                 return;
             }
 
-            // handle primary vars
-            data = {};
-            $inputs = $form.find('input, select, textarea');
+            // default attribute handling
             attribute = attribute || 'name';
 
             // value handling
@@ -120,12 +109,13 @@ window.validation = window.validation || (function ($) {
             }
 
             // update data object with input value
-            function setDataFromInput(index, elem) {
-                var $input = $(elem),
+            $inputs.each(function () {
+                var $input = $(this),
                     attr = $input.attr(attribute),
-                    currentDataPoint,
-                    attrArray,
+                    attrArray = attr.split('.'),
+                    currentDataPoint = data,
                     dataEntry,
+                    length,
                     value,
                     i;
 
@@ -134,29 +124,51 @@ window.validation = window.validation || (function ($) {
                     return;
                 }
 
-                // data handling
-                // handle recursive entry creation for chosen attribute
-                if (attr.indexOf('.') > -1) {
-                    currentDataPoint = data;
-                    attrArray = attr.split('.');
-
-                    for (i = 0; i < attrArray.length - 1; i += 1) {
-                        if (typeof currentDataPoint[attrArray[i]] === 'undefined') {
-                            currentDataPoint[attrArray[i]] = {};
-                        }
-                        currentDataPoint = currentDataPoint[attrArray[i]];
-                    }
-
-                    currentDataPoint[attrArray[attrArray.length - 1]] = getValue($input, attr);
-                } else {
-                    // standard case
+                // standard case
+                if (attr.indexOf('.') === -1) {
                     data[attr] = getValue($input, attr);
+                    return;
                 }
-            }
 
-            // call and return
-            $inputs.each(setDataFromInput);
+                // handle recursive entry creation for chosen attribute
+                for (i = 0; i < length - 1; i += 1) {
+                    if (typeof currentDataPoint[attrArray[i]] === 'undefined') {
+                        currentDataPoint[attrArray[i]] = {};
+                    }
+                    currentDataPoint = currentDataPoint[attrArray[i]];
+                }
+                currentDataPoint[attrArray[length - 1]] = getValue($input, attr);
+            });
+
             return data;
+        },
+
+        /*
+         * toggle element classes based on validation, and trigger custom events
+         * @param $el {jQuery object}
+         * @param result {boolean|string}: true if validation has passed, otherwise string indicating failed rule
+         */
+        setElementClasses: function ($el, result) {
+            // remove all rule classes e.g. failed-number
+            $el.removeClass(function () {
+                var result = ['validation-failed'],
+                    i;
+
+                for (i in rules) {
+                    if (rules.hasOwnProperty(i)) {
+                        result.push('failed-' + i);
+                    }
+                }
+
+                return result.join(' ');
+            });
+
+            // toggle remaining needed classes and trigger validation event
+            if (result === true) {
+                $el.triggerHandler('validation.passed');
+            } else {
+                $el.addClass('validation-failed failed-' + result).triggerHandler('validation.failed', result);
+            }
         },
 
         validate: {
@@ -167,7 +179,7 @@ window.validation = window.validation || (function ($) {
              */
             all: function (e) {
                 var $holder = $(this),
-                    $elems = $(this).find('[data-validation]');
+                    $elems = $holder.find('[data-validation]');
 
                 e.stopPropagation();
                 $elems.each(app.validate.element);
@@ -181,15 +193,81 @@ window.validation = window.validation || (function ($) {
             },
 
             /*
+             * required rule stored here to prevent being overidden - called in element context
+             * @param val {string}
+             */
+            required: function (val) {
+                var $elem = $(this),
+                    name = $elem.attr('name');
+
+                // handle select
+                if (this.nodeName.toLowerCase() === 'select') {
+                    return val && val.length > 0;
+                }
+
+                // handle radio and checkbox
+                if (/radio|checkbox/i.test($elem.attr('type'))) {
+                    if (typeof name !== 'undefined') {
+                        return $('[name="' + name + '"]').filter(':checked').length > 0;
+                    } else {
+                        return $elem.prop('checked');
+                    }
+                }
+
+                // default
+                return val.length > 0;
+            },
+
+            /*
+             * cycle through all rules for an element
+             * @param el {HTMLElement}
+             * @param rulesArr {array}: array of rule strings
+             * @aram value {string}: element value
+             * @return {boolean|string}: a string containing the failed rule, or true if validation passed
+             */
+            rules: function (el, rulesArr, value) {
+                var $el = $(el),
+                    length = rulesArr.length,
+                    result = true,
+                    currentRule,
+                    funcToCall,
+                    splitRule,
+                    param,
+                    i;
+
+                // cycle through remaining rules
+                for (i = 0; i < length; i += 1) {
+                    currentRule = rulesArr[i];
+                    param = undefined;
+
+                    // extract any provided param - use shift and join to handle multiple colons in value
+                    if (currentRule.indexOf(':') > -1) {
+                        splitRule = currentRule.split(':');
+                        currentRule = splitRule.shift();
+                        param = splitRule.join(':');
+                    }
+
+                    funcToCall = rules[currentRule];
+
+                    // ignore empty string, required (handled elsewhere), and anything not a function
+                    if (currentRule !== 'required' && currentRule !== '' && typeof funcToCall === 'function') {
+                        if (funcToCall.call(el, value, param) === false) {
+                            result = currentRule;
+                            break;
+                        }
+                    }
+                }
+
+                return result;
+            },
+
+            /*
              *
              */
             element: function (e) {
                 var $el = $(this),
                     rulesString = $el.data('validation'),
-                    rulesArray = rulesString.split(' '),
-                    val = $el.val(),
                     result = true,
-                    rulesLength,
                     currentRule,
                     funcToCall,
                     tempRule,
@@ -200,48 +278,18 @@ window.validation = window.validation || (function ($) {
                     e.stopPropagation();
                 }
 
-                // handle required when value is empty
-                if (val === '') {
-                    // if element is marked as required, and value is empty, have it fail validation
-                    if ((' ' + rulesString + ' ').indexOf(' required ') !== -1) {
-                        result = 'required';
-                    }
+                // todo: handle required case on change for for radio and checkbox groups
+
+                // use required function to check if value is empty
+                if (!app.validate.required.call(this, $el.val())) {
+                    // only run required check, and only if included, otherwise pass validation
+                    result = (' ' + rulesString + ' ').indexOf(' required ') !== -1 ? 'required' : true;
                 } else {
-                    rulesLength = rulesArray.length;
-
-                    for (i = 0; i < rulesLength; i += 1) {
-                        currentRule = rulesArray[i];
-                        param = undefined;
-
-                        if (currentRule.indexOf(':') > -1) {
-                            tempRule = currentRule.split(':');
-
-                            // use shift and join to handle multiple colons in value
-                            currentRule = tempRule.shift();
-                            param = tempRule.join(':');
-                        }
-
-                        funcToCall = rules[currentRule];
-
-                        if (currentRule !== 'required' && currentRule !== '' && typeof funcToCall === 'function') {
-                            if (funcToCall(val, param) === false) {
-                                result = currentRule;
-                                break;
-                            }
-                        }
-                    }
+                    // if value is not empty, cycle through any remaining rules
+                    result = app.validate.rules(this, rulesString.split(' '), $el.val());
                 }
 
-                // remove the rule classes e.g. failed-number
-                $el.removeClass(app.ruleClasses(rulesArray));
-
-                // toggle remaining needed classes and trigger validation event
-                if (result === true) {
-                    $el.removeClass('validation-failed').triggerHandler('validation.passed');
-                } else {
-                    $el.addClass('validation-failed failed-' + result).triggerHandler('validation.failed', result);
-                }
-
+                app.setElementClasses($el, result);
                 return result;
             }
         },
