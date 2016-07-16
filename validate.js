@@ -13,7 +13,7 @@ window.validation = window.validation || (function ($) {
     rules = {
 
         required: function (val) {
-            return app.required.call(this, val);
+            return app.validate.required.call(this, val);
         },
 
         alpha: function (val) {
@@ -179,9 +179,8 @@ window.validation = window.validation || (function ($) {
              */
             all: function (e) {
                 var $holder = $(this),
-                    $elems = $holder.find('[data-validation]');
+                    $elems = $holder.find('[data-validation]').filter('input, textarea');
 
-                e.stopPropagation();
                 $elems.each(app.validate.element);
 
                 if ($elems.filter('.validation-failed').length) {
@@ -195,6 +194,7 @@ window.validation = window.validation || (function ($) {
             /*
              * required rule stored here to prevent being overidden - called in element context
              * @param val {string}
+             * @return {boolean}
              */
             required: function (val) {
                 var $elem = $(this),
@@ -274,11 +274,7 @@ window.validation = window.validation || (function ($) {
                     param,
                     i;
 
-                if (typeof e === 'object') {
-                    e.stopPropagation();
-                }
-
-                // todo: handle required case on change for for radio and checkbox groups
+                // todo: handle required case on change for radio and checkbox groups
 
                 // use required function to check if value is empty
                 if (!app.validate.required.call(this, $el.val())) {
@@ -300,18 +296,25 @@ window.validation = window.validation || (function ($) {
         prep: function () {
             var $form = $(this);
 
-            if ($form.data('validation-bound') !== true) {
-                // handle full submit
-                if (this.nodeName === 'FORM') {
-                    $form.on('submit', app.validate.all);
-                } else {
-                    $form.on('click', '.validation-trigger', app.validate.all);
-                }
-
-                // handle individual inputs
-                $form.data('validation-bound', true)
-                    .on('change', '[data-validation]', app.validate.element);
+            // do not proceed if events for this form are already bound
+            if ($form.data('validation-bound') === true) {
+                return;
             }
+
+            // bind full submit handling to the form submit event if using a normal form
+            if (this.nodeName === 'FORM') {
+                $form.on('submit', app.validate.all);
+            }
+
+            // also bind to validation-trigger elements
+            $form.on('click', '.validation-trigger', function () {
+                // use only the closest form, to allow nested forms
+                app.validate.all.call($(this).closest('[data-validation="true"]'));
+            });
+
+            // handle individual inputs
+            $form.data('validation-bound', true)
+                .on('change', 'input[data-validation], textarea[data-validation]', app.validate.element);
         },
 
         /*
