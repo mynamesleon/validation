@@ -8,6 +8,7 @@ window.validation = window.validation || (function ($) {
      * all validation rules, called in element context - arguments that apply to each are:
      * @param val {string}: input value
      * @param misc {string} optional: additional provided value from validation rule - e.g. from min:5, this would be '5'
+     *      there should be no spaces in this, as the rules are split by spaces
      * @return {boolean}
      */
     rules = {
@@ -38,12 +39,12 @@ window.validation = window.validation || (function ($) {
         },
 
         minlength: function (val, min) {
-            // todo: handle minlength for radios and checkboxes
+            // todo: handle minlength for checkboxes
             return val.length >= parseInt(min, 10);
         },
 
         maxlength: function (val, max) {
-            // todo: handle maxlength for radios and checkboxes
+            // todo: handle maxlength for checkboxes
             return val.length <= parseInt(max, 10);
         },
 
@@ -53,17 +54,19 @@ window.validation = window.validation || (function ($) {
         },
 
         checked: function () {
-
+            // todo: handling for checked - search by name and filter by any that are checked
         },
 
         unchecked: function () {
-
+            // todo: handling for checked - search by name and filter by any that are checked
         },
 
+        // reminder: spaces cannot exist in the selector e.g. "confirm:.form .unique-class" will fail
         confirm: function (val, selector) {
             return val === $(selector).val();
         },
 
+        // reminder: spaces cannot exist in the regular expression
         regex: function (val, reg) {
             return new RegExp(reg).test(val);
         },
@@ -77,7 +80,14 @@ window.validation = window.validation || (function ($) {
             return (/^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,}))\.?)(?::\d{2,5})?(?:[\/?#]\S*)?$/i).test(val);
         }
     };
+    
+    // rule aliases
+    rules.numeric = rules.number;
+    rules.equals = rules.equalto = rules.match;
 
+    /*
+     * primary functions namespace
+     */
     app = {
 
         /*
@@ -150,20 +160,21 @@ window.validation = window.validation || (function ($) {
          */
         setElementClasses: function ($el, result) {
             // remove all rule classes e.g. failed-number
+            // todo: need better handling for this, ideally using a pre-prepared string
+            //      string would need to be updated if anything were added or removed from the rules object
             $el.removeClass(function () {
                 var result = ['validation-failed'],
                     i;
-
                 for (i in rules) {
                     if (rules.hasOwnProperty(i)) {
                         result.push('failed-' + i);
                     }
                 }
-
                 return result.join(' ');
             });
 
             // toggle remaining needed classes and trigger validation event
+            // use triggerHandler to prevent event bubbling
             if (result === true) {
                 $el.triggerHandler('validation.passed');
             } else {
@@ -200,9 +211,9 @@ window.validation = window.validation || (function ($) {
                 var $elem = $(this),
                     name = $elem.attr('name');
 
-                // handle select
+                // handle select - check that a value exists, is not empty, and is not 0 or -1
                 if (this.nodeName.toLowerCase() === 'select') {
-                    return val && val.length > 0;
+                    return val && val.length > 0 && val !== '0' && val !== '-1';
                 }
 
                 // handle radio and checkbox
@@ -220,12 +231,12 @@ window.validation = window.validation || (function ($) {
 
             /*
              * cycle through all rules for an element
-             * @param el {HTMLElement}
+             * @param $el {jQuery object}
              * @param rulesArr {array}: array of rule strings
              * @aram value {string}: element value
              * @return {boolean|string}: a string containing the failed rule, or true if validation passed
              */
-            rules: function (el, rulesArr, value) {
+            rules: function ($el, rulesArr, value) {
                 var $el = $(el),
                     length = rulesArr.length,
                     result = true,
@@ -251,7 +262,7 @@ window.validation = window.validation || (function ($) {
 
                     // ignore empty string, required (handled elsewhere), and anything not a function
                     if (currentRule !== 'required' && currentRule !== '' && typeof funcToCall === 'function') {
-                        if (funcToCall.call(el, value, param) === false) {
+                        if (funcToCall.call($el[0], value, param) === false) {
                             result = currentRule;
                             break;
                         }
@@ -278,11 +289,11 @@ window.validation = window.validation || (function ($) {
 
                 // use required function to check if value is empty
                 if (!app.validate.required.call(this, $el.val())) {
-                    // only run required check, and only if included, otherwise pass validation
+                    // if "required" is in the validation attribute, set result var to "required", otherwise pass validation
                     result = (' ' + rulesString + ' ').indexOf(' required ') !== -1 ? 'required' : true;
                 } else {
                     // if value is not empty, cycle through any remaining rules
-                    result = app.validate.rules(this, rulesString.split(' '), $el.val());
+                    result = app.validate.rules($el, rulesString.split(' '), $el.val());
                 }
 
                 app.setElementClasses($el, result);
