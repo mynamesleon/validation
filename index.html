@@ -1,39 +1,120 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <style>
-            .validation-failed { border-color: red; }
-        </style>
-    </head>
-    <body>
 
-        <form data-validation="true">
+<head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.css" rel="stylesheet" />
+    <style>
+        input.validation-failed,
+        select.validation-failed,
+        textarea.validation-failed {
+            color: red;
+            border-color: red;
+        }
+        .hidden[style="display: block;"] {
+            display: block !important;
+        }
+    </style>
+</head>
 
-            <input type="text" name="text-number" data-validation="number min:4 max:20" />
+<body>
 
-            <input type="text" name="text-length" data-validation="minlength:5 maxlength:200" />
+    <form data-validation="true">
+        <div class="container">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Form Validation Sample
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="text-number">Number between 4 and 20 (inclusive), not required</label>
+                        <input class="form-control" type="text" name="text-number" data-validation="number min:4 max:20" />
+                        <div class="hidden" data-validation="number">Must be a number</div>
+                        <div class="hidden" data-validation="min">Minimum of 4</div>
+                        <div class="hidden" data-validation="max">Maximum of 20</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="text-length">Text between 5 and 200 characters, not required</label>
+                        <input class="form-control" type="text" name="text-length" data-validation="minlength:5 maxlength:200" />
+                        <div class="hidden" data-validation="minlength">Minimum 5 characters</div>
+                        <div class="hidden" data-validation="maxlength">Maximum 200 characters</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="text-required-length">Text between 5 and 200 characters, required</label>
+                        <input class="form-control" type="text" name="text-required-length" data-validation="required minlength:5 maxlength:200" />
+                        <div class="hidden" data-validation="required">Required</div>
+                        <div class="hidden" data-validation="minlength">Minimum 5 characters</div>
+                        <div class="hidden" data-validation="maxlength">Maximum 200 characters</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email required</label>
+                        <input class="form-control" type="email" name="email" data-validation="required email" />
+                        <div class="hidden" data-validation="required">Required</div>
+                        <div class="hidden" data-validation="email">Please enter an email address</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="radio">Radio button group required, must be second input</label>
+                        <input type="radio" id="radio1" name="radio" value="1" data-validation="required" />
+                        <input type="radio" id="radio2" name="radio" value="2" data-validation="match:2" />
+                        <div class="hidden" data-validation="required">Required</div>
+                        <div class="hidden" data-validation="match">Value must be 2</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkbox2">Checkbox group required</label>
+                        <input type="checkbox" name="checkboxes.checkbox1" value="1" data-validation="required minlength:2" />
+                        <input type="checkbox" name="checkboxes.checkbox1" value="2" />
+                        <input type="checkbox" name="checkboxes.checkbox1" value="3" />
+                        <div class="hidden" data-validation="required">Required</div>
+                        <div class="hidden" data-validation="minlength">Please select at least 2</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dropdown">Dropdown required</label>
+                        <select class="form-control" name="dropdown" data-validation="required">
+                            <option value="-1">dropdown</option>
+                            <option value="something">something</option>
+                            <option value="something else">something else</option>
+                        </select>
+                        <div class="hidden" data-validation="required">Required</div>
+                    </div>
 
-            <input type="text" name="text-required-length" data-validation="required minlength:5 maxlength:200" />
+                    <div class="panel panel-default" data-validation="true">
+                        <div class="panel-heading">
+                            Sub form
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label for="text-number">Number between 1 and 4 (inclusive), required</label>
+                                <input class="form-control" type="text" name="text-number" data-validation="number required min:1 max:4" />
+                                <div class="hidden" data-validation="required">Required</div>
+                                <div class="hidden" data-validation="number">Must be a number</div>
+                                <div class="hidden" data-validation="min">Minimum of 1</div>
+                                <div class="hidden" data-validation="max">Maximum of 4</div>
+                            </div>
+                            <a class="btn btn-default validation-trigger">custom form trigger (validate section)</a>
+                        </div>
+                    </div>
 
-            <input type="email" name="email" data-validation="required email" />
+                    <input class="btn btn-default" type="submit" value="form submit (validate everything)" />
+                    <a class="btn btn-default validation-trigger">custom form trigger (validate everything)</a>
+                </div>
+            </div>
+        </div>
 
-            <input type="radio" id="radio1" name="radio" value="1" data-validation="required" />
-            <input type="radio" id="radio2" name="radio" value="2" data-validation="required" />
+    </form>
 
-            <input type="checkbox" name="checkboxes.checkbox1" value="something" data-validation="required" />
-            <input type="checkbox" name="checkboxes.checkbox1" data-validation="required" />
+    <script src="jquery.min.js"></script>
+    <script src="validate.js"></script>
+    <script>
+        $('input, textarea').on({
+            'validation.failed': function (e, rule) {
+                var $el = $(this);
+                $(this).nextAll('div[data-validation]').hide()
+                    .filter('[data-validation="' + rule + '"]').first().addClass('red-please').show();
+            },
+            'validation.passed': function () {
+                $(this).nextAll('div[data-validation]').removeClass('red-please').hide();
+            }
+        });
+    </script>
+</body>
 
-            <select name="dropdown" data-validation="required">
-                <option value="-1">dropdown</option>
-                <option value="something">something</option>
-                <option value="something else">something else</option>
-            </select>
-
-            <input type="submit" value="submit" />
-
-        </form>
-
-        <script src="jquery.min.js"></script>
-        <script src="validate.js"></script>
-    </body>
 </html>

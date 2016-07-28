@@ -1,89 +1,154 @@
 window.validation = window.validation || (function ($) {
     'use strict';
 
-    var rules = {},
-        app = {};
+    // todo handling if name attribute does not exist on element(s)
 
-    /*
-     * all validation rules, called in element context - arguments that apply to each are:
-     * @param val {string}: input value
-     * @param misc {string} optional: additional provided value from validation rule - e.g. from min:5, this would be '5'
-     *      there should be no spaces in this, as the rules are split by spaces
-     * @return {boolean}
-     */
-    rules = {
+    var app = {},
 
-        required: function (val) {
-            return app.validate.required.call(this, val);
+        /*
+         * regex storage
+         */
+        regex = {
+
+            // used to allow spaces in regex and confirm rules
+            spaceIndicator: '{!space}',
+
+            // letters only
+            alpha: /^[a-zA-Z\s]+$/,
+
+            // letters + numbers
+            alphanumeric: /^[a-z0-9]+$/i,
+
+            // run against turning the string into a date object
+            date: /Invalid|NaN/,
+
+            // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
+            email: /^[a-zA-Z0-9.!#$%&'*+\/=?\^_`{|}~\-]+@[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/,
+
+            // https://gist.github.com/dperini/729294
+            url: new RegExp([
+                '^',
+                // protocol identifier
+                '(?:(?:https?|ftp)://)',
+                // user:pass authentication
+                '(?:\\S+(?::\\S*)?@)?',
+                '(?:',
+                // ip address exclusion
+                // private & local networks
+                '(?!(?:10|127)(?:\\.\\d{1,3}){3})',
+                '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})',
+                '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})',
+                // ip address dotted notation octets
+                // excludes loopback network 0.0.0.0
+                // excludes reserved space >= 224.0.0.0
+                // excludes network & broacast addresses
+                // (first & last ip address of each class)
+                '(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])',
+                '(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}',
+                '(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))',
+                '|',
+                // host name
+                '(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)',
+                // domain name
+                '(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*',
+                // tld identifier
+                '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))',
+                // tld may end with dot
+                '\\.?',
+                ')',
+                // port number
+                '(?::\\d{2,5})?',
+                // resource path
+                '(?:[/?#]\\S*)?',
+                '$'
+            ].join(''), 'i')
         },
 
-        alpha: function (val) {
-            return (/^[a-zA-Z\s]+$/).test(val);
-        },
+        /*
+         * all validation rules, called in element context - arguments that apply to each are:
+         * @param val {string}: input value
+         * @param misc {string} optional: additional provided value from validation rule - e.g. from min:5, this would be '5'
+         *      there should be no spaces in this, as the rules are split by spaces
+         * @return {boolean}
+         */
+        rules = {
 
-        // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
-        email: function (val) {
-            return (/^[a-zA-Z0-9.!#$%&'*+\/=?\^_`{|}~\-]+@[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/).test(val);
-        },
+            required: function (val) {
+                return app.validate.required.call(this, val);
+            },
 
-        min: function (val, min) {
-            return parseFloat(val) >= parseFloat(min, 10);
-        },
+            alpha: function (val) {
+                return regex.alpha.test(val);
+            },
 
-        max: function (val, max) {
-            return parseFloat(val) <= parseFloat(max, 10);
-        },
+            alphanumeric: function (val) {
+                return regex.alphaNumeric.test(val);
+            },
 
-        match: function (val, match) {
-            return val === match;
-        },
+            email: function (val) {
+                return regex.email.test(val);
+            },
 
-        minlength: function (val, min) {
-            // todo: handle minlength for checkboxes
-            return val.length >= parseInt(min, 10);
-        },
+            min: function (val, min) {
+                return parseFloat(val) >= parseFloat(min, 10);
+            },
 
-        maxlength: function (val, max) {
-            // todo: handle maxlength for checkboxes
-            return val.length <= parseInt(max, 10);
-        },
+            max: function (val, max) {
+                return parseFloat(val) <= parseFloat(max, 10);
+            },
 
-        // http://stackoverflow.com/questions/18082/validate-decimal-numbers-in-javascript-isnumeric#1830844
-        number: function (val) {
-            return !isNaN(parseFloat(val)) && isFinite(val);
-        },
+            match: function (val, match) {
+                return val === match;
+            },
 
-        checked: function () {
-            // todo: handling for checked - search by name and filter by any that are checked
-        },
+            minlength: function (val, min) {
+                // todo: handle minlength for checkboxes
+                return val.length >= parseInt(min, 10);
+            },
 
-        unchecked: function () {
-            // todo: handling for checked - search by name and filter by any that are checked
-        },
+            maxlength: function (val, max) {
+                // todo: handle maxlength for checkboxes
+                return val.length <= parseInt(max, 10);
+            },
 
-        // reminder: spaces cannot exist in the selector e.g. "confirm:.form .unique-class" will fail
-        confirm: function (val, selector) {
-            return val === $(selector).val();
-        },
+            number: function (val) {
+                // http://stackoverflow.com/questions/18082/validate-decimal-numbers-in-javascript-isnumeric#1830844
+                return !isNaN(parseFloat(val)) && isFinite(val);
+            },
 
-        // reminder: spaces cannot exist in the regular expression
-        regex: function (val, reg) {
-            return new RegExp(reg).test(val);
-        },
+            checked: function () {
+                // todo: handling for checked - search by name and filter by any that are checked
+            },
 
-        date: function (val) {
-            return !/Invalid|NaN/.test(new Date(val).toString());
-        },
+            unchecked: function () {
+                // todo: handling for checked - search by name and filter by any that are checked
+            },
 
-        // https://gist.github.com/dperini/729294
-        url: function (val) {
-            return (/^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,}))\.?)(?::\d{2,5})?(?:[\/?#]\S*)?$/i).test(val);
-        }
-    };
-    
-    // rule aliases
-    rules.numeric = rules.number;
-    rules.equals = rules.equalto = rules.match;
+            confirm: function (val, selector) {
+                // reminder: spaces in the selector must be replaced with {!space}
+                selector = selector.split(regex.spaceIndicator).join(' ');
+
+                // if it starts with a $, assume full jquery selector has been provided and use eval to assess it
+                if (selector.charAt(0) === '$') {
+                    selector = eval(selector);
+                }
+
+                return val === $(selector).val();
+            },
+
+            regex: function (val, reg) {
+                // reminder: spaces in the regular expression must be replaced with {!space}
+                return new RegExp(reg.split(regex.spaceIndicator).join(' ')).test(val);
+            },
+
+            date: function (val) {
+                return !regex.date.test(new Date(val).toString());
+            },
+
+            url: function (val) {
+                return regex.url.test(val);
+            }
+        };
 
     /*
      * primary functions namespace
@@ -96,37 +161,24 @@ window.validation = window.validation || (function ($) {
          * @param attribute {string} optional: attribute to use - defaults to name
          */
         getFormData: function ($form, attribute) {
-            var $inputs = $form.find('input, select, textarea').not('[type="submit"]'),
-                data = {};
+            // handle defaults
+            $form = $form || $('[data-validation="set"]');
+            attribute = attribute || 'name';
 
             if (typeof $form !== 'object') {
                 return;
             }
 
-            // default attribute handling
-            attribute = attribute || 'name';
-
-            // value handling
-            function getValue($input, attr) {
-                var inputType = $input.attr('type');
-                if (inputType === 'checkbox' || inputType === 'radio') {
-                    // filter radios and checkboxes by selected attribute in case they are grouped
-                    // default to -1 if no value can be found
-                    return $inputs.filter('[' + attribute + '="' + attr + '"]').filter(':checked').val() || -1;
-                } else {
-                    return $input.val();
-                }
-            }
+            var $inputs = $form.find('input, select, textarea').not('[type="submit"]'),
+                data = {};
 
             // update data object with input value
             $inputs.each(function () {
                 var $input = $(this),
                     attr = $input.attr(attribute),
                     attrArray = attr.split('.'),
+                    length = attrArray.length,
                     currentDataPoint = data,
-                    dataEntry,
-                    length,
-                    value,
                     i;
 
                 // do not proceed if attribute does not exist for that element
@@ -136,7 +188,7 @@ window.validation = window.validation || (function ($) {
 
                 // standard case
                 if (attr.indexOf('.') === -1) {
-                    data[attr] = getValue($input, attr);
+                    data[attr] = app.element.getValue($input, attribute);
                     return;
                 }
 
@@ -147,39 +199,106 @@ window.validation = window.validation || (function ($) {
                     }
                     currentDataPoint = currentDataPoint[attrArray[i]];
                 }
-                currentDataPoint[attrArray[length - 1]] = getValue($input, attr);
+                currentDataPoint[attrArray[length - 1]] = app.element.getValue($input, attribute);
             });
 
             return data;
         },
 
-        /*
-         * toggle element classes based on validation, and trigger custom events
-         * @param $el {jQuery object}
-         * @param result {boolean|string}: true if validation has passed, otherwise string indicating failed rule
-         */
-        setElementClasses: function ($el, result) {
-            // remove all rule classes e.g. failed-number
-            // todo: need better handling for this, ideally using a pre-prepared string
-            //      string would need to be updated if anything were added or removed from the rules object
-            $el.removeClass(function () {
-                var result = ['validation-failed'],
-                    i;
-                for (i in rules) {
-                    if (rules.hasOwnProperty(i)) {
-                        result.push('failed-' + i);
-                    }
-                }
-                return result.join(' ');
-            });
+        element: {
 
-            // toggle remaining needed classes and trigger validation event
-            // use triggerHandler to prevent event bubbling
-            if (result === true) {
-                $el.triggerHandler('validation.passed');
-            } else {
-                $el.addClass('validation-failed failed-' + result).triggerHandler('validation.failed', result);
+            /*
+             * get element value
+             * @param $el {jQuery object}
+             * @param attr {string} optional
+             */
+            getValue: function ($el, attribute) {
+                attribute = attribute || 'name';
+                var result = [],
+                    $elems;
+
+                if (/radio|checkbox/i.test($el.attr('type'))) {
+                    $elems = $('[' + attribute + '="' + $el.attr(attribute) + '"]').filter(':checked');
+                } else {
+                    $elems = $el;
+                }
+
+                // cycle through elements and add values to handle input groups
+                if ($elems.length) {
+                    $elems.each(function () {
+                        result.push($(this).val());
+                    });
+                } else {
+                    result.push(-1);
+                }
+
+                // join group values with commas
+                return result.join(',');
+            },
+
+            /*
+             * toggle element classes based on validation, and trigger custom events
+             * @param $el {jQuery object}
+             * @param result {boolean|string}: true if validation has passed, otherwise string indicating failed rule
+             */
+            setClasses: function ($el, result) {
+                // remove all rule classes e.g. failed-number
+                // todo: need better handling for this, ideally using a pre-prepared string
+                //      string would need to be updated if anything were added or removed from the rules object
+                $el.removeClass(function () {
+                    var result = ['validation-failed'],
+                        i;
+                    for (i in rules) {
+                        if (rules.hasOwnProperty(i)) {
+                            result.push('validation-failed-' + i);
+                        }
+                    }
+                    return result.join(' ');
+                });
+
+                // toggle remaining needed classes and trigger validation event
+                // use triggerHandler to prevent event bubbling
+                if (result === true) {
+                    $el.triggerHandler('validation.passed');
+                } else {
+                    $el.addClass('validation-failed validation-failed-' + result).triggerHandler('validation.failed', result);
+                }
+            },
+
+            /*
+             * build space delimitted rules string
+             */
+            getRules: function ($el) {
+                var result = [],
+                    o = {};
+
+                if ($el.length === 1) {
+                    return $el.data('validation');
+                }
+
+                $el.each(function () {
+                    var s = $(this).data('validation'),
+                        a = [],
+                        l,
+                        i;
+
+                    if (typeof s === 'undefined') {
+                        return;
+                    }
+
+                    a = s.split(' ');
+                    l = a.length;
+
+                    for (i = 0; i < l; i += 1) {
+                        if (typeof o[a[i]] === 'undefined') {
+                            result.push(a[i]);
+                            o[a[i]] = true;
+                        }
+                    }
+                });
+                return result.join(' ');
             }
+
         },
 
         validate: {
@@ -190,7 +309,7 @@ window.validation = window.validation || (function ($) {
              */
             all: function (e) {
                 var $holder = $(this),
-                    $elems = $holder.find('[data-validation]').filter('input, textarea');
+                    $elems = $holder.find('[data-validation]').filter('input, select, textarea');
 
                 $elems.each(app.validate.element);
 
@@ -208,21 +327,16 @@ window.validation = window.validation || (function ($) {
              * @return {boolean}
              */
             required: function (val) {
-                var $elem = $(this),
-                    name = $elem.attr('name');
+                var $elem = $(this);
 
                 // handle select - check that a value exists, is not empty, and is not 0 or -1
-                if (this.nodeName.toLowerCase() === 'select') {
+                if ($elem[0].nodeName.toLowerCase() === 'select') {
                     return val && val.length > 0 && val !== '0' && val !== '-1';
                 }
 
                 // handle radio and checkbox
                 if (/radio|checkbox/i.test($elem.attr('type'))) {
-                    if (typeof name !== 'undefined') {
-                        return $('[name="' + name + '"]').filter(':checked').length > 0;
-                    } else {
-                        return $elem.prop('checked');
-                    }
+                    return $elem.filter(':checked').length > 0;
                 }
 
                 // default
@@ -237,8 +351,7 @@ window.validation = window.validation || (function ($) {
              * @return {boolean|string}: a string containing the failed rule, or true if validation passed
              */
             rules: function ($el, rulesArr, value) {
-                var $el = $(el),
-                    length = rulesArr.length,
+                var length = rulesArr.length,
                     result = true,
                     currentRule,
                     funcToCall,
@@ -258,11 +371,12 @@ window.validation = window.validation || (function ($) {
                         param = splitRule.join(':');
                     }
 
+                    currentRule = currentRule.toLowerCase();
                     funcToCall = rules[currentRule];
 
                     // ignore empty string, required (handled elsewhere), and anything not a function
-                    if (currentRule !== 'required' && currentRule !== '' && typeof funcToCall === 'function') {
-                        if (funcToCall.call($el[0], value, param) === false) {
+                    if (currentRule !== 'required' && currentRule !== 'isrequired' && currentRule !== '' && typeof funcToCall === 'function') {
+                        if (funcToCall.call($el, value, param) === false) {
                             result = currentRule;
                             break;
                         }
@@ -277,26 +391,27 @@ window.validation = window.validation || (function ($) {
              */
             element: function (e) {
                 var $el = $(this),
-                    rulesString = $el.data('validation'),
-                    result = true,
-                    currentRule,
-                    funcToCall,
-                    tempRule,
-                    param,
-                    i;
+                    rulesString = app.element.getRules($el),
+                    value = app.element.getValue($el),
+                    result = true;
 
-                // todo: handle required case on change for radio and checkbox groups
-
-                // use required function to check if value is empty
-                if (!app.validate.required.call(this, $el.val())) {
-                    // if "required" is in the validation attribute, set result var to "required", otherwise pass validation
-                    result = (' ' + rulesString + ' ').indexOf(' required ') !== -1 ? 'required' : true;
-                } else {
-                    // if value is not empty, cycle through any remaining rules
-                    result = app.validate.rules($el, rulesString.split(' '), $el.val());
+                // handle radio and input groups
+                // select all elements with that name and remake the rules string
+                if (/radio|checkbox/i.test($el.attr('type'))) {
+                    $el = $('[name="' + $el.attr('name') + '"]');
+                    rulesString = app.element.getRules($el);
                 }
 
-                app.setElementClasses($el, result);
+                // use required function to check if value is empty
+                if (!app.validate.required.call($el, value)) {
+                    // if "required" is in the validation attribute, set result var to "required", otherwise pass validation
+                    result = / required | isrequired /i.test(' ' + rulesString + ' ') ? 'required' : true;
+                } else {
+                    // if value is not empty, cycle through any remaining rules
+                    result = app.validate.rules($el, rulesString.split(' '), value);
+                }
+
+                app.element.setClasses($el, result);
                 return result;
             }
         },
@@ -307,40 +422,57 @@ window.validation = window.validation || (function ($) {
         prep: function () {
             var $form = $(this);
 
-            // do not proceed if events for this form are already bound
-            if ($form.data('validation-bound') === true) {
-                return;
-            }
-
             // bind full submit handling to the form submit event if using a normal form
             if (this.nodeName === 'FORM') {
                 $form.on('submit', app.validate.all);
             }
 
             // also bind to validation-trigger elements
-            $form.on('click', '.validation-trigger', function () {
+            $form.on('click', '.validation-trigger', function (e) {
                 // use only the closest form, to allow nested forms
-                app.validate.all.call($(this).closest('[data-validation="true"]'));
+                app.validate.all.call($(this).closest('[data-validation="set"]'), e);
             });
 
             // handle individual inputs
-            $form.data('validation-bound', true)
-                .on('change', 'input[data-validation], textarea[data-validation]', app.validate.element);
+            $form.attr('data-validation', 'set')
+                .on('change', 'input[data-validation], select[data-validation], textarea[data-validation]', app.validate.element);
         },
 
         /*
          *
          */
-        apply: function () {
+        init: function () {
             $('[data-validation="true"]').each(app.prep);
         }
     };
 
-    app.apply();
+    /*
+     * setup rule aliases
+     */
+    (function () {
+        var aliases = ['required', 'alpha', 'alphanumeric', 'email', 'equalto', 'number', 'numeric', 'checked', 'unchecked', 'date', 'url'],
+            alias,
+            i;
 
+        rules.numeric = rules.number;
+        rules.equals = rules.equalto = rules.match;
+
+        for (i = 0; i < aliases.length; i += 1) {
+            rules['is' + aliases[i]] = rules[aliases[i]];
+        }
+    }());
+
+    /*
+     * call immediately on ready
+     */
+    app.init();
+
+    /*
+     * expose
+     */
     return {
         rules: rules,
-        apply: app.apply,
+        init: app.init,
         getFormData: app.getFormData
     };
 
