@@ -1,7 +1,14 @@
 (function ($) {
     'use strict';
 
-    // todo handling if name attribute does not exist on element(s)
+    // todo: handling if name attribute does not exist on element(s)
+    // todo: handling for default error messages
+    // todo: handle minlength for checkboxes
+    // todo: handle maxlength for checkboxes
+    // todo: handling for checked - search by name and filter by any that are checked
+    // todo: handling for unchecked - search by name and filter by any that are checked
+    // todo: parse selector in 'confirm' properly, rather than relying on eval
+    // todo: need better handling for removing error classes in 'setClasses' method, ideally using a pre-prepared string
 
     var app = {},
 
@@ -15,63 +22,63 @@
          */
         regex = {
 
-            // used to allow spaces in regex and confirm rules
+            // used to allow spaces in 'regex' and 'confirm' rules
             spaceIndicator: '{!space}',
 
             // letters only
-            alpha: new RegExp("^[a-zA-Z\\s]+$"),
+            alpha: new RegExp('^[a-zA-Z\\s]+$'),
 
             // letters + numbers
-            alphanumeric: new RegExp("^[a-z0-9]+$", 'i'),
+            alphanumeric: new RegExp('^[a-z0-9]+$', 'i'),
 
             // run against turning the string into a date object
-            date: new RegExp("Invalid|NaN"),
+            date: new RegExp('Invalid|NaN'),
 
             // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
             email: new RegExp([
-                "^[a-zA-Z0-9.!#$%&'*+\/=?\\^_`{|}~\\-]",
-                "+@[a-zA-Z0-9]",
-                "(?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?",
-                "(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)",
-                "*$"
+                '^[a-zA-Z0-9.!#$%&\'*+\/=?\\^_`{|}~\\-]',
+                '+@[a-zA-Z0-9]',
+                '(?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?',
+                '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)',
+                '*$'
             ].join('')),
 
             // https://gist.github.com/dperini/729294
             url: new RegExp([
-                "^",
+                '^',
                 // protocol identifier
-                "(?:(?:https?|ftp)://)",
+                '(?:(?:https?|ftp)://)',
                 // user:pass authentication
-                "(?:\\S+(?::\\S*)?@)?",
-                "(?:",
+                '(?:\\S+(?::\\S*)?@)?',
+                '(?:',
                 // ip address exclusion
                 // private & local networks
-                "(?!(?:10|127)(?:\\.\\d{1,3}){3})",
-                "(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})",
-                "(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})",
+                '(?!(?:10|127)(?:\\.\\d{1,3}){3})',
+                '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})',
+                '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})',
                 // ip address dotted notation octets
                 // excludes loopback network 0.0.0.0
                 // excludes reserved space >= 224.0.0.0
                 // excludes network & broacast addresses
                 // (first & last ip address of each class)
-                "(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])",
-                "(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}",
-                "(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))",
-                "|",
+                '(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])',
+                '(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}',
+                '(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))',
+                '|',
                 // host name
-                "(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)",
+                '(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)',
                 // domain name
-                "(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*",
+                '(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*',
                 // tld identifier
-                "(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))",
+                '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))',
                 // tld may end with dot
-                "\\.?",
-                ")",
+                '\\.?',
+                ')',
                 // port number
-                "(?::\\d{2,5})?",
+                '(?::\\d{2,5})?',
                 // resource path
-                "(?:[/?#]\\S*)?",
-                "$"
+                '(?:[/?#]\\S*)?',
+                '$'
             ].join(''), 'i')
         },
 
@@ -114,12 +121,10 @@
             },
 
             minlength: function (val, min) {
-                // todo: handle minlength for checkboxes
                 return val.length >= parseInt(min, 10);
             },
 
             maxlength: function (val, max) {
-                // todo: handle maxlength for checkboxes
                 return val.length <= parseInt(max, 10);
             },
 
@@ -129,11 +134,11 @@
             },
 
             checked: function () {
-                // todo: handling for checked - search by name and filter by any that are checked
+
             },
 
             unchecked: function () {
-                // todo: handling for checked - search by name and filter by any that are checked
+
             },
 
             confirm: function (val, selector) {
@@ -142,7 +147,6 @@
 
                 // if it starts with a $, assume full jquery selector has been provided and use eval to assess it
                 if (selector.charAt(0) === '$') {
-                    // todo: parse selector properly, rather than relying on eval
                     selector = eval(selector);
                 }
 
@@ -161,6 +165,28 @@
             url: function (val) {
                 return regex.url.test(val);
             }
+        },
+
+        /*
+         * store default error messages
+         */
+        messages = {
+            required: '',
+            alpha: '',
+            alphanumeric: '',
+            email: '',
+            min: '',
+            max: '',
+            match: '',
+            minlength: '',
+            maxlength: '',
+            number: '',
+            checked: '',
+            unchecked: '',
+            confirm: '',
+            regex: '',
+            date: '',
+            url: ''
         };
 
     /*
@@ -226,21 +252,45 @@
             /*
              * rules to create 'is{rule}' aliases for
              */
-            aliases: ['required', 'alpha', 'alphanumeric', 'email', 'equalto', 'number', 'numeric', 'checked', 'unchecked', 'date', 'url'],
+            aliases: [
+                'required',
+                'alpha',
+                'alphanumeric',
+                'email',
+                'equalto',
+                'format',
+                'number',
+                'numeric',
+                'checked',
+                'unchecked',
+                'date',
+                'url'
+            ],
 
             /*
-             * setup all rule aliases
+             * setup all rule and message aliases
              */
             setAliases: function () {
                 var aliases = app.rules.aliases,
                     length = aliases.length,
                     i;
 
+                // rule aliases
+                rules.format = rules.regex;
                 rules.numeric = rules.number;
                 rules.equals = rules.equalto = rules.match;
 
                 for (i = 0; i < length; i += 1) {
                     rules['is' + aliases[i]] = rules[aliases[i]];
+                }
+
+                // message aliases
+                messages.format = messages.regex;
+                messages.numeric = messages.number;
+                messages.equals = messages.equalto = messages.match;
+
+                for (i = 0; i < length; i += 1) {
+                    messages['is' + aliases[i]] = messages[aliases[i]];
                 }
             },
 
@@ -309,16 +359,16 @@
              */
             setClasses: function ($el, result) {
                 // remove all rule classes e.g. failed-number
-                // todo: need better handling for this, ideally using a pre-prepared string
-                //      string would need to be updated if anything were added or removed from the rules object
                 $el.removeClass(function () {
                     var result = ['validation-failed'],
                         i;
+
                     for (i in rules) {
                         if (rules.hasOwnProperty(i)) {
                             result.push('validation-failed-' + i);
                         }
                     }
+
                     return result.join(' ');
                 });
 
@@ -505,6 +555,7 @@
     result = app.init;
     result.rules = rules;
     result.init = app.init;
+    result.messages = messages;
     result.getFormData = app.getFormData;
 
     /*
