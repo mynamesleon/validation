@@ -102,16 +102,16 @@
     </form>
 
     <script src="jquery.min.js"></script>
-    <script src="validate.js"></script>
+    <script src="validation.js"></script>
     <script>
         $('input, textarea').on({
             'validation.failed': function (e, rule) {
                 var $el = $(this);
-                $(this).nextAll('div[data-validation]').hide()
+                $(this).closest('.form-group').find('div[data-validation]').hide()
                     .filter('[data-validation="' + rule + '"]').first().addClass('red-please').show();
             },
             'validation.passed': function () {
-                $(this).nextAll('div[data-validation]').removeClass('red-please').hide();
+                $(this).closest('.form-group').find('div[data-validation]').removeClass('red-please').hide();
             }
         });
     </script>
