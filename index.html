@@ -6,7 +6,8 @@
     <style>
         input.validation-failed,
         select.validation-failed,
-        textarea.validation-failed {
+        textarea.validation-failed,
+        .form-group div[data-validation] {
             color: red;
             border-color: red;
         }
@@ -104,14 +105,15 @@
     <script src="jquery.min.js"></script>
     <script src="validation.js"></script>
     <script>
-        $('input, textarea').on({
+        validation.init();
+        $('input, textarea, select').on({
             'validation.failed': function (e, rule) {
                 var $el = $(this);
-                $(this).closest('.form-group').find('div[data-validation]').hide()
-                    .filter('[data-validation="' + rule + '"]').first().addClass('red-please').show();
+                $(this).closest('.form-group').find('div[data-validation]').addClass('hidden')
+                    .filter('[data-validation="' + rule + '"]').first().removeClass('hidden');
             },
             'validation.passed': function () {
-                $(this).closest('.form-group').find('div[data-validation]').removeClass('red-please').hide();
+                $(this).closest('.form-group').find('div[data-validation]').addClass('hidden');
             }
         });
     </script>
