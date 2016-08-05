@@ -11,9 +11,6 @@
             color: red;
             border-color: red;
         }
-        .hidden[style="display: block;"] {
-            display: block !important;
-        }
     </style>
 </head>
 
@@ -61,15 +58,15 @@
                     </div>
                     <div class="form-group">
                         <label for="checkbox2">Checkbox group required</label>
-                        <input type="checkbox" name="checkboxes.group" value="1" data-validation="required minlength:2" />
-                        <input type="checkbox" name="checkboxes.group" value="2" />
-                        <input type="checkbox" name="checkboxes.group" value="3" />
+                        <input type="checkbox" name="checkboxes[group]" value="1" data-validation="required minlength:2" />
+                        <input type="checkbox" name="checkboxes[group]" value="2" />
+                        <input type="checkbox" name="checkboxes[group]" value="3" />
                         <div class="hidden" data-validation="required">Required</div>
                         <div class="hidden" data-validation="minlength">Please select at least 2</div>
                     </div>
                     <div class="form-group">
                         <label for="checkbox2">Checkbox (must be unchecked)</label>
-                        <input type="checkbox" name="checkboxes.unchecked" value="1" data-validation="required unchecked" />
+                        <input type="checkbox" name="checkboxes.unchecked" value="1" data-validation="unchecked" />
                         <div class="hidden" data-validation="unchecked">Must be unchecked</div>
                     </div>
                     <div class="form-group">
@@ -89,11 +86,10 @@
                         <div class="panel-body">
                             <div class="form-group">
                                 <label for="text-number">Number between 1 and 4 (inclusive), required</label>
-                                <input class="form-control" type="text" name="text-number" data-validation="number required min:1 max:4" />
+                                <input class="form-control" type="text" name="text-number" data-validation="number required range:1-4" />
                                 <div class="hidden" data-validation="required">Required</div>
                                 <div class="hidden" data-validation="number">Must be a number</div>
-                                <div class="hidden" data-validation="min">Minimum of 1</div>
-                                <div class="hidden" data-validation="max">Maximum of 4</div>
+                                <div class="hidden" data-validation="range">Must be between 1 and 4</div>
                             </div>
                             <div class="form-group">
                                 <label for="text-number">Colour (rgb, or rgba only), required</label>
@@ -119,8 +115,8 @@
 
     </form>
 
-    <script src="jquery.min.js"></script>
-    <script src="validation.js"></script>
+    <script src="libs/jquery.min.js"></script>
+    <script src="dist/validation.min.js"></script>
     <script>
         validation.init();
         $('input, textarea, select').on({
