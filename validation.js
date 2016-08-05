@@ -27,6 +27,8 @@
     // todo: parse selector in 'confirm' properly, rather than relying on eval (or remove that option altogether)
     // todo: need better handling for removing error classes in 'setClasses' method, ideally using a pre-prepared string
     // todo: set up unit tests for all validation rules
+    // todo: update exposed validate method (validate.handle) - if only an element is passed in, validate the element
+    //      if given 3 arguments (context, value, and rules), validate specific value against the specified rule set
 
     var app = {},
 
