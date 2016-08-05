@@ -1,0 +1,31 @@
+{
+  "name": "validation",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/validation.min.js",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-gzip": "^1.4.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-uglify": "^2.0.0",
+    "gulp-util": "^3.0.7"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mynamesleon/validation.git"
+  },
+  "keywords": [
+    "validation",
+    "validate"
+  ],
+  "author": "Leon Slater",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mynamesleon/validation/issues"
+  },
+  "homepage": "https://github.com/mynamesleon/validation#readme"
+}
