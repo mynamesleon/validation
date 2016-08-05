@@ -601,7 +601,7 @@
     app = {
 
         /*
-         * internal storage for rules
+         * storage for rules to expose
          */
         rules: {},
 
