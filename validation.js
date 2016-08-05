@@ -542,14 +542,23 @@
              * @param test {function}
              */
             addTest: function (name, test) {
+                // add to exposed rules object - set as new function to hide internal rule logic
                 if (typeof app.rules[name] === 'undefined') {
-                    // add to internal rules - set as new function to hide internal rule logic
                     app.rules[name] = function (val) {
                         if (typeof val === 'undefined' || val === null) {
                             throw new Error('No value was provided for the validation test');
                         }
                         return test.apply(this, arguments);
                     };
+                }
+                // add to internal rules object - set as new function that uses .call for speed benefit over .apply
+                // no need to add empty value check this time as a string value will always be provided to internal rules
+                if (typeof rules[name] === 'undefined') {
+                    rules[name] = {
+                        validate: function (val, param) {
+                            return test.call(this, val, param);
+                        }
+                    }
                 }
             },
 
@@ -866,9 +875,7 @@
                     }
 
                     currentRule = currentRule.toLowerCase();
-                    funcToCall = typeof rules[currentRule] !== 'undefined'
-                        ? rules[currentRule].validate // use internally stored rule if possible
-                        : app.rules[currentRule];
+                    funcToCall = rules[currentRule].validate; // only ever use internally stored rules
 
                     // ignore empty string, required (handled elsewhere), and anything not a function
                     if (currentRule !== 'required' && currentRule !== 'isrequired' && currentRule !== '' && typeof funcToCall === 'function') {
