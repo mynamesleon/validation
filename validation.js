@@ -740,7 +740,7 @@
                         i;
 
                     for (i in rules) {
-                        if (rules.hasOwnProperty(i)) {
+                        if (rules.hasOwnProperty(i) && typeof rules[i] !== 'function') {
                             result.push('validation-failed-' + i);
                         }
                     }
