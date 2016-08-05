@@ -501,7 +501,7 @@
 
                     // if using a colour input, test against the hex regex straight away
                     if ($(this).attr('type') === 'color') {
-                        return expr.hex[1].test(val);
+                        return expr.hex[0].test(val);
                     }
 
                     // default to allow all types
