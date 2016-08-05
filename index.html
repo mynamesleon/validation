@@ -61,11 +61,16 @@
                     </div>
                     <div class="form-group">
                         <label for="checkbox2">Checkbox group required</label>
-                        <input type="checkbox" name="checkboxes.checkbox1" value="1" data-validation="required minlength:2" />
-                        <input type="checkbox" name="checkboxes.checkbox1" value="2" />
-                        <input type="checkbox" name="checkboxes.checkbox1" value="3" />
+                        <input type="checkbox" name="checkboxes.group" value="1" data-validation="required minlength:2" />
+                        <input type="checkbox" name="checkboxes.group" value="2" />
+                        <input type="checkbox" name="checkboxes.group" value="3" />
                         <div class="hidden" data-validation="required">Required</div>
                         <div class="hidden" data-validation="minlength">Please select at least 2</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkbox2">Checkbox (must be unchecked)</label>
+                        <input type="checkbox" name="checkboxes.unchecked" value="1" data-validation="required unchecked" />
+                        <div class="hidden" data-validation="unchecked">Must be unchecked</div>
                     </div>
                     <div class="form-group">
                         <label for="dropdown">Dropdown required</label>
@@ -90,6 +95,17 @@
                                 <div class="hidden" data-validation="min">Minimum of 1</div>
                                 <div class="hidden" data-validation="max">Maximum of 4</div>
                             </div>
+                            <div class="form-group">
+                                <label for="text-number">Colour (rgb, or rgba only), required</label>
+                                <input class="form-control" type="text" name="text-number" data-validation="test:test colour:rgb:rgba required" />
+                                <div class="hidden" data-validation="required">Required</div>
+                                <div class="hidden" data-validation="colour">Must be rgb or rgba colour string</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="text-number">Colour (hex, rgb, rgba, hsl, hsla, or keywords), not required</label>
+                                <input class="form-control" type="text" name="text-number" data-validation="colour" />
+                                <div class="hidden" data-validation="colour">Must be a valid colour string</div>
+                            </div>
                             <a class="btn btn-default validation-trigger">custom form trigger (validate section)</a>
                         </div>
                     </div>
@@ -97,6 +113,7 @@
                     <input class="btn btn-default" type="submit" value="form submit (validate everything)" />
                     <a class="btn btn-default validation-trigger">custom form trigger (validate everything)</a>
                 </div>
+                <input type="color" />
             </div>
         </div>
 
