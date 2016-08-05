@@ -24,8 +24,9 @@
 }(this, function ($) {
     'use strict';
 
-    // todo: parse selector in 'confirm' properly, rather than relying on eval
+    // todo: parse selector in 'confirm' properly, rather than relying on eval (or remove that option altogether)
     // todo: need better handling for removing error classes in 'setClasses' method, ideally using a pre-prepared string
+    // todo: set up unit tests for all validation rules
 
     var app = {},
 
@@ -362,13 +363,11 @@
 
             /*
              * ipv4 test - allows leading zeros
-             * source: regular expressions cookbook second edition (august 2012) section 8.16 (p.469)
+             * expressions derived from regular expressions cookbook second edition (august 2012)
              * @param val {string}
              * @return {boolean}
              */
             ipaddress: {
-                // ipv4 test - allows leading zeros
-                // source: regular expressions cookbook second edition (august 2012) section 8.16 (p.469)
                 ipv4: new RegExp([
                     '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}',
                     '(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)',
@@ -376,7 +375,6 @@
                     '$'
                 ].join('')),
 
-                // ipv6 test
                 ipv6: new RegExp([
                     '^\\s*',
                     '(',
@@ -403,11 +401,11 @@
              * @return {boolean}
              */
             creditcard: {
-                allowed: new RegExp('[^0-9 \\-]+'),
+                notAllowed: new RegExp('[^0-9 \\-]+'),
                 nonDigits: /\D/g,
                 validate: function (val) {
                     // accept spaces, digits and dashes only
-                    if (rules.creditcard.allowed.test(val)) {
+                    if (rules.creditcard.notAllowed.test(val)) {
                         return false;
                     }
 
@@ -700,6 +698,7 @@
              * get element value
              * @param $el {jQuery object}
              * @param attribute {string} optional: attribute to use when selecting multiple elements
+             * @return {string}
              */
             getValue: function ($el, attribute) {
                 var result = [];
@@ -725,7 +724,7 @@
                     result.push(-1);
                 }
 
-                // join group values with commas
+                // always return a string - join group values with commas
                 return result.join(',');
             },
 
@@ -740,8 +739,8 @@
                     var result = ['validation-failed'],
                         i;
 
-                    for (i in app.rules) {
-                        if (app.rules.hasOwnProperty(i)) {
+                    for (i in rules) {
+                        if (rules.hasOwnProperty(i)) {
                             result.push('validation-failed-' + i);
                         }
                     }
@@ -760,6 +759,8 @@
 
             /*
              * build space delimitted rules string
+             * @param $el {jQuery object}: elements to use when getting validation rules
+             * @return {string}
              */
             getRules: function ($el) {
                 var result = [],
