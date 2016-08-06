@@ -11,6 +11,7 @@
             color: red;
             border-color: red;
         }
+        .hidden { display: none; }
     </style>
 </head>
 
@@ -54,6 +55,7 @@
                         <input class="form-control" type="email" name="email-confirm" data-validation="required email confirm:$(this).parent().prev('.form-group').find('input')" />
                         <div class="hidden" data-validation="required">Required</div>
                         <div class="hidden" data-validation="email">Please enter an email address</div>
+                        <div class="hidden" data-validation="confirm">The values do not match</div>
                     </div>
                     <div class="form-group">
                         <label for="radio">Radio button group required, must be second input</label>
@@ -99,7 +101,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="text-number">Colour (rgb, or rgba only), required</label>
-                                <input class="form-control" type="text" name="text-number" data-validation="test:test colour:rgb:rgba required" />
+                                <input class="form-control" type="text" name="text-number" data-validation="colour:rgb:rgba required" />
                                 <div class="hidden" data-validation="required">Required</div>
                                 <div class="hidden" data-validation="colour">Must be rgb or rgba colour string</div>
                             </div>

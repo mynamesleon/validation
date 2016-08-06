@@ -39,13 +39,31 @@
         rules = {
 
             /*
-             * required rule - the rule in this object is not called internally
+             * required rule stored here to prevent being overidden - called in element context
              * @param val {string}
              * @return {boolean}
              */
             required: {
                 validate: function (val) {
-                    return app.validate.required.call(this, val);
+                    var $elem = $(this);
+
+                    // handle select - check that a value exists, is not empty, and is not 0 or -1
+                    if ($elem[0].nodeName === 'SELECT') {
+                        return val && val.length > 0 && val !== '0' && val !== '-1';
+                    }
+
+                    // handle radio and checkbox
+                    if (app.element.isCheckable($elem)) {
+                        return $elem.filter(':checked').length > 0;
+                    }
+
+                    // handle any non string values
+                    if (typeof val !== 'string') {
+                        return !!val;
+                    }
+
+                    // default
+                    return val.length > 0;
                 }
             },
 
@@ -300,10 +318,11 @@
             confirm: {
                 validate: function (val, selector) {
                     var a = [],
+                        charAt = String.prototype.charAt,
+                        func = '',
+                        arg = '',
                         $current,
                         length,
-                        func,
-                        arg,
                         i;
 
                     // reminder: spaces in the selector must be replaced with {!space}
@@ -321,24 +340,22 @@
                                 arg = a[i + 1];
 
                                 // handle the function to be used
-                                if (func === '$') {
-                                    // set to be jQuery to handle starting case
-                                    func = $;
-                                } else if (func.chartAt(0) !== '.') {
+                                if (func === '$' && typeof $current === 'undefined') {
+                                    // handle starting case
+                                    // if given 'this', use current context; if given empty, set to undefined, otherwise use as is
+                                    $current = $(arg === 'this' ? this : arg === 'empty' ? undefined : arg);
+                                } else if (func.slice(0, 1) !== '.') {
                                     // if not starting case, make sure the var starts with a '.' to indicate a jQuery method
                                     throw new Error('Incorrectly formatted jQuery selector function');
-                                }
-
-                                // if given 'this', use $current context; if given empty, set to undefined, otherwise use as is
-                                arg = arg === 'this' ? this : arg === 'empty' ? undefined : arg;
-
-                                // if no $current set, use main jQuery function
-                                if (typeof $current !== 'undefined') {
-                                    func = func.replace('.', '');
-                                    arg = typeof arg === 'undefined' ? arg : arg.substr(1, arg.length - 2);
-                                    $current = $current[func](arg);
                                 } else {
-                                    $current = func(arg);
+                                    // get the next jQuery method
+                                    func = func.replace('.', '');
+
+                                    // once past starting case, only allow undefined or strings
+                                    arg = arg === 'empty' ? undefined : arg.substr(1, arg.length - 2);
+
+                                    // update $current
+                                    $current = $current[func](arg);
                                 }
                             }
 
@@ -846,33 +863,6 @@
         validate: {
 
             /*
-             * required rule stored here to prevent being overidden - called in element context
-             * @param val {string}
-             * @return {boolean}
-             */
-            required: function (val) {
-                var $elem = $(this);
-
-                // handle select - check that a value exists, is not empty, and is not 0 or -1
-                if ($elem[0].nodeName === 'SELECT') {
-                    return val && val.length > 0 && val !== '0' && val !== '-1';
-                }
-
-                // handle radio and checkbox
-                if (app.element.isCheckable($elem)) {
-                    return $elem.filter(':checked').length > 0;
-                }
-
-                // handle any non string values
-                if (typeof val !== 'string') {
-                    return !!val;
-                }
-
-                // default
-                return val.length > 0;
-            },
-
-            /*
              * trigger validation on whole form - validates all set form elements
              * @param e {object}: event object
              * @return {boolean}: if validation has passed
@@ -893,11 +883,57 @@
             },
 
             /*
+             * test an individual rule
+             * @param $el {jQuery object}
+             * @aram value {string}
+             * @param currentRule {string}
+             * @param checkRequired {boolean}: internal only - whether run a standard check on the required rule
+             * @return {string|undefined}: returns the rule if the check fails, otherwise returns nothing
+             */
+            rule: function ($el, value, currentRule, checkRequired) {
+                var param,
+                    splitRule,
+                    funcToCall;
+
+                // ignore empty strings
+                if (currentRule === '') {
+                    return;
+                }
+
+                // extract any provided param - use shift and join to handle multiple colons in value
+                if (currentRule.indexOf(':') > -1) {
+                    splitRule = currentRule.split(':');
+                    currentRule = splitRule.shift();
+                    param = splitRule.join(':');
+                }
+
+                // all validation rules are stored as lower case
+                currentRule = currentRule.toLowerCase();
+
+                if (typeof rules[currentRule] !== 'object') {
+                    throw new Error('Validation rule \'' + currentRule + '\' does not exist. Use validation.addTest(\'' + currentRule + '\', function () { /* your test */ }) to add it.');
+                }
+
+                // grab rule validate method
+                funcToCall = rules[currentRule].validate;
+
+                // ionly proceed on required rule when called via validation.validate
+                if (checkRequired === false && (currentRule === 'required' || currentRule === 'isrequired')) {
+                    return;
+                }
+
+                // run the check - if it fails, return the rule
+                if (funcToCall.call($el, value, param) === false) {
+                    return currentRule;
+                }
+            },
+
+            /*
              * cycle through all rules for an element
              * @param $el {jQuery object}
              * @param rulesArr {array}: array of rule strings
              * @aram value {string}: element value
-             * @param checkRequired {boolean}: defaults to false
+             * @param checkRequired {boolean}: internal only
              * @return {boolean|string}: a string containing the failed rule, or true if validation passed
              */
             rules: function ($el, rulesArr, value, checkRequired) {
@@ -907,49 +943,17 @@
 
                 var length = rulesArr.length,
                     result = true,
-                    currentRule,
-                    funcToCall,
-                    splitRule,
-                    param,
                     i;
 
                 // cycle through remaining rules
                 for (i = 0; i < length; i += 1) {
-                    currentRule = rulesArr[i];
-                    param = undefined;
-
-                    // extract any provided param - use shift and join to handle multiple colons in value
-                    if (currentRule.indexOf(':') > -1) {
-                        splitRule = currentRule.split(':');
-                        currentRule = splitRule.shift();
-                        param = splitRule.join(':');
-                    }
-
-                    // all validation rules are stored as lower case
-                    currentRule = currentRule.toLowerCase();
-
-                    if (typeof rules[currentRule] !== 'object') {
-                        throw new Error('That validation test does not exist. Use validation.addTest(\'' + currentRule + '\')');
-                    }
-
-                    // grab rule validate method
-                    funcToCall = rules[currentRule].validate;
-
-                    // whether to run required checks
-                    if (checkRequired === false && (currentRule === 'required' || currentRule === 'isrequired')) {
-                        continue;
-                    }
-
-                    // ignore empty string, and anything not a function
-                    if (currentRule !== '' && typeof funcToCall === 'function') {
-                        if (funcToCall.call($el, value, param) === false) {
-                            result = currentRule;
-                            break;
-                        }
+                    result = app.validate.rule($el, value, rulesArr[i], checkRequired);
+                    if (typeof result === 'string') {
+                        return result;
                     }
                 }
 
-                return result;
+                return true;
             },
 
             /*
@@ -973,9 +977,13 @@
                 rulesString = app.element.getRules($el);
 
                 // use required function to check if value is empty
-                if (!app.validate.required.call($el, value)) {
+                if (!rules.required.validate.call($el, value)) {
                     // return 'required' or 'isrequired' if in validation rules, otherwise pass
-                    result = (' ' + rulesString.toLowerCase() + ' ').indexOf(' required ') > -1 ? 'required' : (' ' + rulesString.toLowerCase() + ' ').indexOf(' isrequired ') > -1 ? 'isrequired' : true;
+                    result = (' ' + rulesString.toLowerCase() + ' ').indexOf(' required ') > -1
+                        ? 'required'
+                        : (' ' + rulesString.toLowerCase() + ' ').indexOf(' isrequired ') > -1
+                        ? 'isrequired'
+                        : true;
                 } else {
                     // if value is not empty, cycle through any remaining rules
                     result = app.validate.rules($el, rulesString.split(' '), value, false);
