@@ -9,7 +9,6 @@
 /* @namespace validation */
 (function (root, factory) {
     'use strict';
-
     if (typeof root.define === 'function' && root.define.amd) {
         // AMD. Register as an anonymous module.
         root.define(['jQuery'], function ($) {
@@ -18,17 +17,15 @@
             // a global even when an AMD loader is in use.
             return (root.validation = factory($));
         });
-
     } else {
         // Browser globals
         root.validation = factory(root.jQuery);
     }
 
-}(this, function ($) {
+}(typeof window !== 'undefined' ? window : this, function ($) {
     'use strict';
 
-    // todo: set up unit tests for all validation rules
-    // todo: remove need for continue at any point
+    // todo: finish setting up tests for all validation rules
 
     var app = {},
 
@@ -887,7 +884,7 @@
              * @param $el {jQuery object}
              * @aram value {string}
              * @param currentRule {string}
-             * @param checkRequired {boolean}: internal only - whether run a standard check on the required rule
+             * @param checkRequired {boolean}: internal only - whether to run a standard check on the required rule
              * @return {string|undefined}: returns the rule if the check fails, otherwise returns nothing
              */
             rule: function ($el, value, currentRule, checkRequired) {
@@ -910,12 +907,10 @@
                 // all validation rules are stored as lower case
                 currentRule = currentRule.toLowerCase();
 
+                // check that the rule exists
                 if (typeof rules[currentRule] !== 'object') {
                     throw new Error('Validation rule \'' + currentRule + '\' does not exist. Use validation.addTest(\'' + currentRule + '\', function () { /* your test */ }) to add it.');
                 }
-
-                // grab rule validate method
-                funcToCall = rules[currentRule].validate;
 
                 // ionly proceed on required rule when called via validation.validate
                 if (checkRequired === false && (currentRule === 'required' || currentRule === 'isrequired')) {
@@ -923,7 +918,7 @@
                 }
 
                 // run the check - if it fails, return the rule
-                if (funcToCall.call($el, value, param) === false) {
+                if (rules[currentRule].validate.call($el, value, param) === false) {
                     return currentRule;
                 }
             },
