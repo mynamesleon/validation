@@ -3,20 +3,24 @@
   "version": "0.0.1",
   "description": "",
   "main": "dist/validation.min.js",
+  "dependencies": {
+    "jquery": "^1.12.4"
+  },
   "devDependencies": {
+    "chai": "^3.5.0",
     "gulp": "^3.9.1",
-    "gulp-gzip": "^1.4.0",
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-uglify": "^2.0.0",
-    "gulp-util": "^3.0.7"
+    "gulp-util": "^3.0.7",
+    "mocha": "^3.0.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Please load the html file in the test directory\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mynamesleon/validation.git"
+    "url": "https://github.com/mynamesleon/validation.git"
   },
   "keywords": [
     "validation",

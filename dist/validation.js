@@ -3,9 +3,10 @@
  * Leon Slater
  * http://mynamesleon.com
  * github.com/mynamesleon/validation
- * @license MIT
+ * @license: MIT
  */
 
+/* @namespace validation */
 (function (root, factory) {
     'use strict';
 
@@ -17,6 +18,7 @@
             // a global even when an AMD loader is in use.
             return (root.validation = factory($));
         });
+
     } else {
         // Browser globals
         root.validation = factory(root.jQuery);
@@ -25,8 +27,8 @@
 }(this, function ($) {
     'use strict';
 
-    // todo: parse selector in 'confirm' properly, rather than relying on eval (or remove that option altogether)
     // todo: set up unit tests for all validation rules
+    // todo: remove need for continue at any point
 
     var app = {},
 
@@ -289,18 +291,62 @@
             /*
              * test value against the value of another input - must use {!space} for spaces needed in the selector
              * @param val {string}
-             * @param selector {string|jQuery object}
+             * @param selector {string|jQuery object}: if string, can include basic jQuery methods
+             *      e.g. "$(this).parent().prev().find('input[type=\"text\"]')"
+             *      deliberately restricted so that each jQuery method used can only take one string paramater
+             *      specific handling is included to handle the 'this' keyword when included on data-validation attribute
              * @return {boolean}
              */
             confirm: {
                 validate: function (val, selector) {
+                    var a = [],
+                        $current,
+                        length,
+                        func,
+                        arg,
+                        i;
+
                     // reminder: spaces in the selector must be replaced with {!space}
                     if (typeof selector === 'string') {
                         selector = selector.split('{!space}').join(' ');
 
-                        // if it starts with a $, assume full jquery selector has been provided and use eval to assess it
-                        if (selector.charAt(0) === '$') {
-                            selector = eval(selector);
+                        // if it starts with a $, and ends with ')', assume full jquery selector has been provided
+                        if (selector.charAt(0) === '$' && selector.charAt(selector.length - 1) === ')') {
+                            a = $.trim((selector + ' ').split('()').join('(empty)').replace(') ', '')).split(/[\)\(]/g);
+                            length = a.length;
+
+                            // things get messy now...
+                            for (i = 0; i < length; i += 2) {
+                                func = a[i];
+                                arg = a[i + 1];
+
+                                // handle the function to be used
+                                if (func === '$') {
+                                    // set to be jQuery to handle starting case
+                                    func = $;
+                                } else if (func.chartAt(0) !== '.') {
+                                    // if not starting case, make sure the var starts with a '.' to indicate a jQuery method
+                                    throw new Error('Incorrectly formatted jQuery selector function');
+                                }
+
+                                // if given 'this', use $current context; if given empty, set to undefined, otherwise use as is
+                                arg = arg === 'this' ? this : arg === 'empty' ? undefined : arg;
+
+                                // if no $current set, use main jQuery function
+                                if (typeof $current !== 'undefined') {
+                                    func = func.replace('.', '');
+                                    arg = typeof arg === 'undefined' ? arg : arg.substr(1, arg.length - 2);
+                                    $current = $current[func](arg);
+                                } else {
+                                    $current = func(arg);
+                                }
+                            }
+
+                            try {
+                                return val === $current.val();
+                            } catch (e) {
+                                throw new Error('Failed to parse your selector');
+                            }
                         }
                     }
 
@@ -566,9 +612,9 @@
             /*
              * set rule aliases and add rules to application object to be exposed
              */
-            setAliases: function () {
+            setRules: function () {
                 var i,
-                    k,
+                    j,
                     thisAlias,
                     aliases = [
                         'required', 'alpha', 'alphanumeric', 'email', 'equalto', 'format', 'pattern', 'number', 'numeric', 'integer',
@@ -817,6 +863,11 @@
                     return $elem.filter(':checked').length > 0;
                 }
 
+                // handle any non string values
+                if (typeof val !== 'string') {
+                    return !!val;
+                }
+
                 // default
                 return val.length > 0;
             },
@@ -846,9 +897,14 @@
              * @param $el {jQuery object}
              * @param rulesArr {array}: array of rule strings
              * @aram value {string}: element value
+             * @param checkRequired {boolean}: defaults to false
              * @return {boolean|string}: a string containing the failed rule, or true if validation passed
              */
-            rules: function ($el, rulesArr, value) {
+            rules: function ($el, rulesArr, value, checkRequired) {
+                if (typeof value === 'undefined') {
+                    throw new Error('No value provided');
+                }
+
                 var length = rulesArr.length,
                     result = true,
                     currentRule,
@@ -872,13 +928,20 @@
                     // all validation rules are stored as lower case
                     currentRule = currentRule.toLowerCase();
 
-                    // grab rule validate method
-                    funcToCall = typeof rules[currentRule] === 'object'
-                        ? rules[currentRule].validate
-                        : '';
+                    if (typeof rules[currentRule] !== 'object') {
+                        throw new Error('That validation test does not exist. Use validation.addTest(\'' + currentRule + '\')');
+                    }
 
-                    // ignore empty string, required (handled elsewhere), and anything not a function
-                    if (currentRule !== 'required' && currentRule !== 'isrequired' && currentRule !== '' && typeof funcToCall === 'function') {
+                    // grab rule validate method
+                    funcToCall = rules[currentRule].validate;
+
+                    // whether to run required checks
+                    if (checkRequired === false && (currentRule === 'required' || currentRule === 'isrequired')) {
+                        continue;
+                    }
+
+                    // ignore empty string, and anything not a function
+                    if (currentRule !== '' && typeof funcToCall === 'function') {
                         if (funcToCall.call($el, value, param) === false) {
                             result = currentRule;
                             break;
@@ -915,7 +978,7 @@
                     result = (' ' + rulesString.toLowerCase() + ' ').indexOf(' required ') > -1 ? 'required' : (' ' + rulesString.toLowerCase() + ' ').indexOf(' isrequired ') > -1 ? 'isrequired' : true;
                 } else {
                     // if value is not empty, cycle through any remaining rules
-                    result = app.validate.rules($el, rulesString.split(' '), value);
+                    result = app.validate.rules($el, rulesString.split(' '), value, false);
                 }
 
                 app.element.setClasses($el, result);
@@ -935,14 +998,14 @@
              *      validation assumed to have passed if testing against non-existent rules
              *      if checking a string and the validation does not pass, will return the first rule that fails
              */
-            handle: function (value, tests) {
+            handle: function (value, tests, checkRequired) {
                 var $elems;
 
                 // handle value variant
-                if (typeof value === 'string') {
+                if (typeof value !== 'object' || value === null) {
                     // if no rules passed in, assume required only
                     if (typeof tests === 'undefined' || tests === null || tests === '') {
-                        tests = 'required';
+                        tests = ['required'];
                     }
 
                     // turn into array
@@ -951,7 +1014,7 @@
                     }
 
                     // context
-                    return app.validate.rules({}, tests, value);
+                    return app.validate.rules({}, tests, value, checkRequired || false);
                 } else {
                     // validate all set forms by default
                     if (!($elems = $(value || '[data-validation="set"]')).length) {
@@ -1012,8 +1075,8 @@
         }
     };
 
-    // set rules aliases
-    rules.setAliases();
+    // set rules aliases and any modifications
+    rules.setRules();
 
     // expose
     return {
@@ -1021,7 +1084,7 @@
         addTest: rules.addTest,
         getFormData: app.getFormData,
         validate: function (value, rules) {
-            return app.validate.handle(value, rules);
+            return app.validate.handle(value, rules, true);
         }
     };
 

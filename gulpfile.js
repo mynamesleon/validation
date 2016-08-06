@@ -1,6 +1,5 @@
 var gulp = require('gulp'),
     util = require('gulp-util'),
-    gzip = require('gulp-gzip'),
     uglify = require('gulp-uglify'),
     rename = require('gulp-rename'),
     sourcemaps = require('gulp-sourcemaps');
@@ -21,13 +20,4 @@ gulp.task('min', ['copy'], function (cb) {
         .pipe(gulp.dest('dist'));
 });
 
-gulp.task('gzip', ['min'], function (cb) {
-    return gulp.src('dist/validation.min.js')
-        .pipe(sourcemaps.init())
-        .pipe(gzip())
-        .pipe(rename('validation.min.gzip.js'))
-        .pipe(sourcemaps.write('/'))
-        .pipe(gulp.dest('dist'));
-});
-
-gulp.task('default', ['gzip']);
+gulp.task('default', ['min']);

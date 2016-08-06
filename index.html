@@ -50,6 +50,12 @@
                         <div class="hidden" data-validation="email">Please enter an email address</div>
                     </div>
                     <div class="form-group">
+                        <label for="email-confirm">Confirm email required</label>
+                        <input class="form-control" type="email" name="email-confirm" data-validation="required email confirm:$(this).parent().prev('.form-group').find('input')" />
+                        <div class="hidden" data-validation="required">Required</div>
+                        <div class="hidden" data-validation="email">Please enter an email address</div>
+                    </div>
+                    <div class="form-group">
                         <label for="radio">Radio button group required, must be second input</label>
                         <input type="radio" id="radio1" name="radio" value="1" data-validation="required" />
                         <input type="radio" id="radio2" name="radio" value="2" data-validation="match:2" />
@@ -115,8 +121,8 @@
 
     </form>
 
-    <script src="libs/jquery.min.js"></script>
-    <script src="dist/validation.min.js"></script>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="src/validation.js"></script>
     <script>
         validation.init();
         $('input, textarea, select').on({
