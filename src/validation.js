@@ -430,7 +430,7 @@
             },
 
             /**
-             * ipv4 test - allows leading zeros
+             * ip address testing allowing cidr notation
              * expressions derived from regular expressions cookbook second edition (august 2012)
              * @param val {string}
              * @return {boolean}
@@ -512,8 +512,7 @@
              * @param val {string}
              * @param types {string|array} optional: string or array of colour types
              *      allowed colour types: keywords, hex, hsl, hsla, rgb, rgba - defaults to all
-             *      can be comma, space, hyphen, underscore, pipe, or colon delimited as a string
-             *      cannot be space delimited when used in data-validation attribute
+             *      can be comma, hyphen, underscore, pipe, or colon delimited as a string
              */
             colour: {
                 separators: /[\,\-\_\|\:]/g,
@@ -622,6 +621,9 @@
                             return test.call(this, val, param);
                         }
                     };
+
+                    // regenerate string of error classes when a new rule is added
+                    rules.setErrorClassString();
                 }
             },
 
@@ -676,7 +678,7 @@
 
         /**
          * get data from all inputs in the form
-         * @param $form {jQuery object}
+         * @param $form {jQuery object} optional: defaults to using the whole page
          * @param attribute {string} optional: attribute to use - defaults to name
          * @return {object}
          */
@@ -963,8 +965,7 @@
                 var $el = $(this),
                     value = app.element.getValue($el),
                     result = true,
-                    rulesString,
-                    $tempEl;
+                    rulesString;
 
                 // handle radio and input types - select all elements with that name
                 if (app.element.isCheckable($el)) {
@@ -973,6 +974,10 @@
 
                 // fetch rules once we have all the necessary elements
                 rulesString = app.element.getRules($el);
+
+                if ($.trim(rulesString) === '') {
+                    return;
+                }
 
                 // use required function to check if value is empty
                 if (!rules.required.validate.call($el, value)) {
@@ -1027,9 +1032,6 @@
                         return true; // if no elements exist, return true
                     }
 
-                    // generate string of error classes to remove
-                    rules.setErrorClassString();
-
                     // validate
                     return (/input|select|textarea/i).test($elems[0].nodeName)
                         ? !$elems.each(app.validate.element).filter('validation-failed').length
@@ -1083,6 +1085,9 @@
 
     // set rules aliases
     rules.setRuleAliases();
+
+    // generate string of error classes for use in setClasses method
+    rules.setErrorClassString();
 
     // expose
     return {
