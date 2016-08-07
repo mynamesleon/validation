@@ -380,7 +380,7 @@
                 toStringProto: Object.prototype.toString,
                 validate: function (val, reg) {
                     if (typeof reg === 'string') {
-                        return new RegExp(reg.split('{!space}').join(' ')).test(val);
+                        return new RegExp(reg).test(val);
                     } else if (rules.regex.toStringProto.call(reg) === '[object RegExp]') {
                         return reg.test(val);
                     }
