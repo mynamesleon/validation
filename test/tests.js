@@ -17,6 +17,8 @@ describe('validation', function () {
                 return param === 'hello' && val === 'hello';
             });
             expect(validation.validate('hello', 'testrule:hello')).to.equal(true);
+            expect(validation.validate('hello', 'testrule')).to.equal('testrule');
+            expect(validation.validate('not hello', 'testrule:hello')).to.equal('testrule');
             expect(validation.validate('not hello', 'testrule:not-hello')).to.equal('testrule');
         });
 
@@ -82,7 +84,7 @@ describe('validation', function () {
             });
         });
 
-        it('should be able to check if a value is greater than or equal to another', function () {
+        it('should be able to check if a value is greater than or equal to another (min test)', function () {
             var rule = 'min';
             [
                 ['10', 'min:10'],
@@ -102,7 +104,7 @@ describe('validation', function () {
             });
         });
 
-        it('should be able to check if a value is less than or equal to another', function () {
+        it('should be able to check if a value is less than or equal to another (max test)', function () {
             var rule = 'max';
             [
                 ['10', 'max:180'],
@@ -121,7 +123,46 @@ describe('validation', function () {
             });
         });
 
-        // 'required alpha alphanumeric email min max range match minlength maxlength rangelength minwords maxwords rangewords number integer digits checked unchecked confirm regex date url ipaddress creditcard colour addTest setAliases setErrorClassString ip color numeric regexp pattern format matches equalto equals isrequired isalpha isalphanumeric isemail isequalto isformat ispattern isnumber isnumeric isinteger isdigits isip isipaddress ischecked isunchecked isdate isurl iscreditcard iscolor iscolour'
+        it('should be able to check that a number is between two others (range test)', function () {
+            var rule = 'range';
+            [
+                ['10', 'range:5:180'],
+                ['-6', 'range:-10:-2'],
+                ['-10000', 'range:-20000:0']
+            ].forEach(function (i) {
+                expect(validation.validate(i[0], i[1])).to.equal(true);
+            });
+
+            [
+                ['10', 'range:1:9'],
+                ['-6', 'range:-20:-10'],
+                ['10000', 'range:1000:2000']
+            ].forEach(function (i) {
+                expect(validation.validate(i[0], i[1])).to.equal(rule);
+            });
+
+        });
+
+        it('should be able to check that a value exactly matches another', function () {
+            var rule = 'match';
+            [
+                ['10', 'match:10'],
+                ['rsjdsfdslkfjdslvn', 'match:rsjdsfdslkfjdslvn'],
+                ['-@3-_=+""\\lkia678', 'match:-@3-_=+""\\lkia678']
+            ].forEach(function (i) {
+                expect(validation.validate(i[0], i[1])).to.equal(true);
+            });
+
+            [
+                ['a', 'match:b'],
+                ['6', 'match:7'],
+                ['lcdksjvs', 'match:-@3-_=+""\\']
+            ].forEach(function (i) {
+                expect(validation.validate(i[0], i[1])).to.equal(rule);
+            });
+
+        });
+        // 'match minlength maxlength rangelength minwords maxwords rangewords number integer digits checked unchecked confirm regex date url ipaddress creditcard colour addTest setAliases setErrorClassString ip color numeric regexp pattern format matches equalto equals isrequired isalpha isalphanumeric isemail isequalto isformat ispattern isnumber isnumeric isinteger isdigits isip isipaddress ischecked isunchecked isdate isurl iscreditcard iscolor iscolour'
 
         //        it('should be able to approve', function () {
         //            var rule = '';

@@ -1,4 +1,4 @@
-/*
+/**
  * validation
  * Leon Slater
  * http://mynamesleon.com
@@ -6,7 +6,7 @@
  * @license: MIT
  */
 
-/* @namespace validation */
+/** @namespace validation */
 (function (root, factory) {
     'use strict';
     if (typeof root.define === 'function' && root.define.amd) {
@@ -22,20 +22,20 @@
         root.validation = factory(root.jQuery);
     }
 
-}(typeof window !== 'undefined' ? window : this, function ($) {
+}(this, function ($) {
     'use strict';
 
     // todo: finish setting up tests for all validation rules
 
     var app = {},
 
-        /*
+        /**
          * all validation rules called in element context
          * should always return a boolean
          */
         rules = {
 
-            /*
+            /**
              * required rule stored here to prevent being overidden - called in element context
              * @param val {string}
              * @return {boolean}
@@ -64,7 +64,7 @@
                 }
             },
 
-            /*
+            /**
              * letters only
              * @param val {string}
              * @return {boolean}
@@ -76,7 +76,7 @@
                 }
             },
 
-            /*
+            /**
              * letters and numbers only
              * @param val {string}
              * @return {boolean}
@@ -88,7 +88,7 @@
                 }
             },
 
-            /*
+            /**
              * email test - allows formats as simple as name@domain
              * https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
              * @param val {string}
@@ -105,7 +105,7 @@
                 }
             },
 
-            /*
+            /**
              * minimum number
              * @param val {string}
              * @param min {string|number}
@@ -117,7 +117,7 @@
                 }
             },
 
-            /*
+            /**
              * maximum number
              * @param val {string}
              * @param max {string|number}
@@ -129,14 +129,14 @@
                 }
             },
 
-            /*
+            /**
              * range between numbers
              * @param val {string}
              * @param range {string}: space (if not in data attribute), comma, hyphen, underscore, pipe or colon delimited
              * @return {boolean}
              */
             range: {
-                separators: /[\,\-\_\|\:]/g,
+                separators: /[\,\_\|\:]/g,
                 validate: function (val, range) {
                     var rangeArr = range.replace(rules.range.separators, ' ').split(' '),
                         toCheck = parseFloat(val);
@@ -145,7 +145,7 @@
                 }
             },
 
-            /*
+            /**
              * match a specific value
              * @param val {string}
              * @param match {string}
@@ -157,7 +157,7 @@
                 }
             },
 
-            /*
+            /**
              * minlength of a string, or minimum number of checked inputs
              * @param val {string}
              * @param min {string|number}
@@ -173,7 +173,7 @@
                 }
             },
 
-            /*
+            /**
              * maxlength of a string, or maximum number of checked inputs
              * @param val {string}
              * @param max {string|number}
@@ -189,7 +189,7 @@
                 }
             },
 
-            /*
+            /**
              * range between character length
              * @param val {string}
              * @param range {string}: space (if not in data attribute), comma, hyphen, underscore, pipe or colon delimited
@@ -207,7 +207,7 @@
                 }
             },
 
-            /*
+            /**
              * word count minimum
              * @param val {string}
              * @param min {string}
@@ -219,7 +219,7 @@
                 }
             },
 
-            /*
+            /**
              * word count maximum
              * @param val {string}
              * @param min {string}
@@ -231,14 +231,14 @@
                 }
             },
 
-            /*
+            /**
              * word count range
              * @param val {string}
              * @param range {string}: space (if not in data attribute), comma, hyphen, underscore, pipe or colon delimited
              * @return {boolean}
              */
             rangewords: {
-                separators: /[,-_|:]/g,
+                separators: /[\,\-\_\|\:]/g,
                 validate: function (val, range) {
                     var rangeArr = range.replace(rules.rangewords.separators, ' ').split(' '),
                         toCheck = $.trim(val).split(/\s+/).length;
@@ -247,7 +247,7 @@
                 }
             },
 
-            /*
+            /**
              * number only - allows decimals
              * http://stackoverflow.com/questions/18082/validate-decimal-numbers-in-javascript-isnumeric#1830844
              * @param val {string}
@@ -259,7 +259,7 @@
                 }
             },
 
-            /*
+            /**
              * integer only (allows negatives)
              * @param val {string}
              * @return {boolean}
@@ -271,7 +271,7 @@
                 }
             },
 
-            /*
+            /**
              * digits only
              * @param val {string}
              * @return {boolean}
@@ -283,27 +283,31 @@
                 }
             },
 
-            /*
+            /**
              * must be checked
              * @return {boolean}
              */
             checked: {
                 validate: function (val) {
-                    return typeof val === 'undefined' ? app.element.getByAttribute($(this), 'name').filter(':checked').length > 0 : val !== '-1';
+                    return app.element.isCheckable($(this))
+                        ? app.element.getByAttribute($(this), 'name').filter(':checked').length > 0
+                        : val !== '-1';
                 }
             },
 
-            /*
+            /**
              * must be unchecked
              * @return {boolean}
              */
             unchecked: {
                 validate: function (val) {
-                    return typeof val === 'undefined' ? app.element.getByAttribute($(this), 'name').filter(':checked').length === 0 : val === '-1';
+                    return app.element.isCheckable($(this))
+                        ? app.element.getByAttribute($(this), 'name').filter(':checked').length === 0
+                        : val === '-1';
                 }
             },
 
-            /*
+            /**
              * test value against the value of another input - must use {!space} for spaces needed in the selector
              * @param val {string}
              * @param selector {string|jQuery object}: if string, can include basic jQuery methods
@@ -316,51 +320,49 @@
                 validate: function (val, selector) {
                     var a = [],
                         charAt = String.prototype.charAt,
-                        func = '',
-                        arg = '',
                         $current,
                         length,
+                        func,
+                        arg,
                         i;
 
-                    // reminder: spaces in the selector must be replaced with {!space}
-                    if (typeof selector === 'string') {
-                        selector = selector.split('{!space}').join(' ');
+                    // if it starts with a $, and ends with ')', assume full jquery selector has been provided
+                    // allow use of $(this) at start only
+                    // allow use of simple chained methods - only let them accept one string parameter e.g. $(this).parents('.elem').find('input')
+                    if (typeof selector === 'string' && selector.charAt(0) === '$' && selector.charAt(selector.length - 1) === ')') {
+                        // add in '(empty)' for methods that will take no argument
+                        a = $.trim((selector + ' ').split('()').join('(empty)').replace(') ', '')).split(/[\)\(]/g);
+                        length = a.length;
 
-                        // if it starts with a $, and ends with ')', assume full jquery selector has been provided
-                        if (selector.charAt(0) === '$' && selector.charAt(selector.length - 1) === ')') {
-                            a = $.trim((selector + ' ').split('()').join('(empty)').replace(') ', '')).split(/[\)\(]/g);
-                            length = a.length;
+                        // things get messy now...
+                        for (i = 0; i < length; i += 2) {
+                            func = a[i];
+                            arg = a[i + 1];
 
-                            // things get messy now...
-                            for (i = 0; i < length; i += 2) {
-                                func = a[i];
-                                arg = a[i + 1];
+                            // handle the function to be used
+                            if (func === '$' && typeof $current === 'undefined') {
+                                // handle starting case
+                                // if given 'this', use current context; if given empty, set to undefined, otherwise use as is
+                                $current = $(arg === 'this' ? this : arg === 'empty' ? undefined : arg);
+                            } else if (func.slice(0, 1) !== '.') {
+                                // if not starting case, make sure the var starts with a '.' to indicate a jQuery method
+                                throw new Error('Incorrectly formatted jQuery selector function');
+                            } else {
+                                // get the next jQuery method
+                                func = func.replace('.', '');
 
-                                // handle the function to be used
-                                if (func === '$' && typeof $current === 'undefined') {
-                                    // handle starting case
-                                    // if given 'this', use current context; if given empty, set to undefined, otherwise use as is
-                                    $current = $(arg === 'this' ? this : arg === 'empty' ? undefined : arg);
-                                } else if (func.slice(0, 1) !== '.') {
-                                    // if not starting case, make sure the var starts with a '.' to indicate a jQuery method
-                                    throw new Error('Incorrectly formatted jQuery selector function');
-                                } else {
-                                    // get the next jQuery method
-                                    func = func.replace('.', '');
+                                // once past starting case, only allow undefined or strings
+                                arg = arg === 'empty' ? undefined : arg.substr(1, arg.length - 2);
 
-                                    // once past starting case, only allow undefined or strings
-                                    arg = arg === 'empty' ? undefined : arg.substr(1, arg.length - 2);
-
-                                    // update $current
-                                    $current = $current[func](arg);
-                                }
+                                // update $current
+                                $current = $current[func](arg);
                             }
+                        }
 
-                            try {
-                                return val === $current.val();
-                            } catch (e) {
-                                throw new Error('Failed to parse your selector');
-                            }
+                        try {
+                            return val === $current.val();
+                        } catch (e) {
+                            throw new Error('Failed to parse your selector');
                         }
                     }
 
@@ -368,7 +370,7 @@
                 }
             },
 
-            /*
+            /**
              * custom regular expression check - must use {!space} for spaces needed in regex
              * @param val {string}
              * @param reg {string|object}: will be a string when included in the validation data attribute
@@ -385,7 +387,7 @@
                 }
             },
 
-            /*
+            /**
              * date test
              * @param val {string}
              * @return {boolean}
@@ -397,7 +399,7 @@
                 }
             },
 
-            /*
+            /**
              * url test
              * https://gist.github.com/dperini/729294
              * @param val {string}
@@ -427,7 +429,7 @@
                 }
             },
 
-            /*
+            /**
              * ipv4 test - allows leading zeros
              * expressions derived from regular expressions cookbook second edition (august 2012)
              * @param val {string}
@@ -461,7 +463,7 @@
                 }
             },
 
-            /*
+            /**
              * credit card check
              * @param val {string}
              * @return {boolean}
@@ -505,7 +507,7 @@
                 }
             },
 
-            /*
+            /**
              * colour validation
              * @param val {string}
              * @param types {string|array} optional: string or array of colour types
@@ -600,7 +602,7 @@
                 }
             },
 
-            /*
+            /**
              * add a test to the internal rules
              * @param name {string}
              * @param test {function}
@@ -623,17 +625,18 @@
                 }
             },
 
-            /*
-             * set rule aliases and add rules to application object to be exposed
+            /**
+             * set rule aliases
              */
-            setRules: function () {
+            setRuleAliases: function () {
                 var i,
                     j,
                     thisAlias,
                     aliases = [
                         'required', 'alpha', 'alphanumeric', 'email', 'equalto', 'format', 'pattern', 'number', 'numeric', 'integer',
                         'digits', 'ip', 'ipaddress', 'checked', 'unchecked', 'date', 'url', 'creditcard', 'color', 'colour'
-                    ];
+                    ],
+                    length = aliases.length;
 
                 // set specific aliases
                 rules.ip = rules.ipaddress;
@@ -643,13 +646,13 @@
                 rules.equals = rules.equalto = rules.matches = rules.match;
 
                 // create is- aliases
-                for (i = 0; i < aliases.length; i += 1) {
+                for (i = 0; i < length; i += 1) {
                     thisAlias = aliases[i];
                     rules['is' + thisAlias] = rules[thisAlias];
                 }
             },
 
-            /*
+            /**
              * generate a space delimited string of all rules
              */
             setErrorClassString: function () {
@@ -666,12 +669,12 @@
             }
         };
 
-    /*
+    /**
      * main application methods
      */
     app = {
 
-        /*
+        /**
          * get data from all inputs in the form
          * @param $form {jQuery object}
          * @param attribute {string} optional: attribute to use - defaults to name
@@ -734,20 +737,21 @@
             return data;
         },
 
-        /*
+        /**
          * element handling
          */
         element: {
 
-            /*
+            /**
              * check if element is checkbox or radio type
              * @param elem {HTMLElement|jQuery object}
+             * @return {boolean}
              */
             isCheckable: function (elem) {
                 return (/radio|checkbox/i).test($(elem).attr('type'));
             },
 
-            /*
+            /**
              * get all elements with matching attribute value
              * @param $el {jQuery object}
              * @param attribute {string} optional: defaults to 'name'
@@ -759,7 +763,7 @@
                 return $result.length ? $result : $el;
             },
 
-            /*
+            /**
              * get element value
              * @param $el {jQuery object}
              * @param attribute {string} optional: attribute to use when selecting multiple elements
@@ -793,7 +797,7 @@
                 return result.join(',');
             },
 
-            /*
+            /**
              * toggle element classes based on validation, and trigger custom events
              * @param $el {jQuery object}
              * @param result {boolean|string}: true if validation has passed, otherwise string indicating failed rule
@@ -811,7 +815,7 @@
                 }
             },
 
-            /*
+            /**
              * build space delimitted rules string
              * @param $el {jQuery object}: elements to use when getting validation rules
              * @return {string}
@@ -854,12 +858,12 @@
 
         },
 
-        /*
+        /**
          * validate storage
          */
         validate: {
 
-            /*
+            /**
              * trigger validation on whole form - validates all set form elements
              * @param e {object}: event object
              * @return {boolean}: if validation has passed
@@ -879,7 +883,7 @@
                 return true;
             },
 
-            /*
+            /**
              * test an individual rule
              * @param $el {jQuery object}
              * @aram value {string}
@@ -889,8 +893,7 @@
              */
             rule: function ($el, value, currentRule, checkRequired) {
                 var param,
-                    splitRule,
-                    funcToCall;
+                    splitRule;
 
                 // ignore empty strings
                 if (currentRule === '') {
@@ -901,15 +904,15 @@
                 if (currentRule.indexOf(':') > -1) {
                     splitRule = currentRule.split(':');
                     currentRule = splitRule.shift();
-                    param = splitRule.join(':');
+                    param = splitRule.join(':').split('{!space}').join(' ');
                 }
 
                 // all validation rules are stored as lower case
-                currentRule = currentRule.toLowerCase();
+                currentRule = currentRule.toLowerCase().split('{!space}').join(' ');
 
                 // check that the rule exists
                 if (typeof rules[currentRule] !== 'object') {
-                    throw new Error('Validation rule \'' + currentRule + '\' does not exist. Use validation.addTest(\'' + currentRule + '\', function () { /* your test */ }) to add it.');
+                    throw new Error('Validation rule \'' + currentRule + '\' does not exist. Use validation.addTest(\'' + currentRule + '\', function () { /** your test */ }) to add it.');
                 }
 
                 // ionly proceed on required rule when called via validation.validate
@@ -923,7 +926,7 @@
                 }
             },
 
-            /*
+            /**
              * cycle through all rules for an element
              * @param $el {jQuery object}
              * @param rulesArr {array}: array of rule strings
@@ -951,7 +954,7 @@
                 return true;
             },
 
-            /*
+            /**
              * validate an individual element
              * @param e {object}: event object
              * @return {string|boolean}: returns the first failed rule, or true if validation has passed
@@ -988,7 +991,7 @@
                 return result;
             },
 
-            /*
+            /**
              * method to trigger validation based on element - used in API
              * @param value {HTMLElement|jQuery object|string} optional:
              *      if form element(s) (input, select, textarea), will validate those elements
@@ -1035,7 +1038,7 @@
             }
         },
 
-        /*
+        /**
          * given holder element as context
          */
         prep: function () {
@@ -1070,7 +1073,7 @@
             });
         },
 
-        /*
+        /**
          * primary setup method
          */
         init: function () {
@@ -1078,8 +1081,8 @@
         }
     };
 
-    // set rules aliases and any modifications
-    rules.setRules();
+    // set rules aliases
+    rules.setRuleAliases();
 
     // expose
     return {
