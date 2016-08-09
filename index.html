@@ -110,6 +110,17 @@
                                 <input class="form-control" type="text" name="text-number" data-validation="colour" />
                                 <div class="hidden" data-validation="colour">Must be a valid colour string</div>
                             </div>
+                            <div class="form-group">
+                                <label for="text-number">Password, required</label>
+                                <input class="form-control" type="password" name="password" id="password" data-validation="required" />
+                                <div class="hidden" data-validation="required">Required</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="text-number">Confirm password, required</label>
+                                <input class="form-control" type="password" name="confirm-password" data-validation="required confirm:$('#password')" />
+                                <div class="hidden" data-validation="required">Required</div>
+                                <div class="hidden" data-validation="confirm">The passwords must match</div>
+                            </div>
                             <a class="btn btn-default validation-trigger">custom form trigger (validate section)</a>
                         </div>
                     </div>

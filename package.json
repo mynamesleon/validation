@@ -10,7 +10,6 @@
     "chai": "^3.5.0",
     "gulp": "^3.9.1",
     "gulp-rename": "^1.2.2",
-    "gulp-sourcemaps": "^1.6.0",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",
     "mocha": "^3.0.1"

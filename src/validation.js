@@ -15,16 +15,16 @@
             // Also create a global in case some scripts
             // that are loaded still are looking for
             // a global even when an AMD loader is in use.
-            return (root.validation = factory($));
+            return (root.validation = factory(root, $));
         });
     } else {
         // Browser globals
-        root.validation = factory(root.jQuery);
+        root.validation = factory(root, root.jQuery);
     }
-
-}(this, function ($) {
+}(this, function (root, $) {
     'use strict';
 
+    // todo: add ability to include '!' before any rule to negate it
     // todo: finish setting up tests for all validation rules
 
     var app = {},
@@ -132,7 +132,7 @@
             /**
              * range between numbers
              * @param val {string}
-             * @param range {string}: space (if not in data attribute), comma, hyphen, underscore, pipe or colon delimited
+             * @param range {string}: comma, underscore, pipe or colon delimited
              * @return {boolean}
              */
             range: {
@@ -319,7 +319,6 @@
             confirm: {
                 validate: function (val, selector) {
                     var a = [],
-                        charAt = String.prototype.charAt,
                         $current,
                         length,
                         func,
@@ -343,27 +342,38 @@
                             if (func === '$' && typeof $current === 'undefined') {
                                 // handle starting case
                                 // if given 'this', use current context; if given empty, set to undefined, otherwise use as is
-                                $current = $(arg === 'this' ? this : arg === 'empty' ? undefined : arg);
+                                $current = $(arg === 'this' ? this : arg === 'empty' ? undefined : arg.substr(1, arg.length - 2));
                             } else if (func.slice(0, 1) !== '.') {
-                                // if not starting case, make sure the var starts with a '.' to indicate a jQuery method
-                                throw new Error('Incorrectly formatted jQuery selector function');
+                                // if not starting case, make sure 'func' starts with a '.' to indicate a jQuery method
+                                app.error([
+                                    'confirm rule: Incorrectly formatted jQuery selector function \n',
+                                    'Only basic methods (e.g. .parent(), .find(), etc.) are permitted,',
+                                    'and only a single string argument will be accepted for them'
+                                ].join(''));
+                                return false; // ensure the rule fails
                             } else {
                                 // get the next jQuery method
                                 func = func.replace('.', '');
 
-                                // once past starting case, only allow undefined or strings
-                                arg = arg === 'empty' ? undefined : arg.substr(1, arg.length - 2);
-
                                 // update $current
-                                $current = $current[func](arg);
+                                // once past starting case, only allow undefined or strings
+                                if (arg === 'empty') {
+                                    $current = $current[func]();
+                                } else {
+                                    $current = $current[func](arg.substr(1, arg.length - 2));
+                                }
+
+                                // error handling
+                                if (typeof $current === 'object' && !$current.length) {
+                                    app.error([
+                                        'confirm rule: Failed to parse your selector \n',
+                                        'The element you were after could not be found'
+                                    ].join(''));
+                                    return false; // ensure the rule fails
+                                }
                             }
                         }
-
-                        try {
-                            return val === $current.val();
-                        } catch (e) {
-                            throw new Error('Failed to parse your selector');
-                        }
+                        return val === (typeof $current === 'object' ? $current.val() : $current);
                     }
 
                     return val === $(selector).val();
@@ -605,10 +615,12 @@
              * add a test to the internal rules
              * @param name {string}
              * @param test {function}
+             * @return {boolean}: whether the test has been successfully added
              */
             addTest: function (name, test) {
                 if (typeof name !== 'string' || typeof test !== 'function') {
-                    throw new Error('A string and a function are required to add a test');
+                    app.error('validation.addTest(): A string and a function are required to add a validation test');
+                    return false;
                 }
 
                 // only store rules as lowercase for consistency, and to protect methods
@@ -624,7 +636,9 @@
 
                     // regenerate string of error classes when a new rule is added
                     rules.setErrorClassString();
+                    return true;
                 }
+                return false;
             },
 
             /**
@@ -644,7 +658,7 @@
                 rules.ip = rules.ipaddress;
                 rules.color = rules.colour;
                 rules.numeric = rules.number;
-                rules.format = rules.pattern = rules.regexp = rules.regex;
+                rules.pattern = rules.regexp = rules.regex;
                 rules.equals = rules.equalto = rules.matches = rules.match;
 
                 // create is- aliases
@@ -659,14 +673,20 @@
              */
             setErrorClassString: function () {
                 var i,
+                    a = [],
                     r = ['validation-failed'];
 
                 for (i in rules) {
-                    if (rules.hasOwnProperty(i) && typeof rules[i] === 'object') {
+                    if (rules.hasOwnProperty(i) && typeof rules[i] === 'object' && !$.isArray(rules[i])) {
+                        a.push(i);
                         r.push('validation-failed-' + i);
                     }
                 }
 
+                if (root.validation) {
+                    root.validation.rules = a;
+                }
+                rules.allRules = a;
                 rules.errorClassString = r.join(' ');
             }
         };
@@ -677,8 +697,18 @@
     app = {
 
         /**
+         * helper method for throwing errors
+         * @param message {string}: error message
+         */
+        error: function (message) {
+            if (root.validation.debug) {
+                throw new Error(message);
+            }
+        },
+
+        /**
          * get data from all inputs in the form
-         * @param $form {jQuery object} optional: defaults to using the whole page
+         * @param $form {jQuery object} optional: defaults to using the forms with validation set, or the whole page
          * @param attribute {string} optional: attribute to use - defaults to name
          * @return {object}
          */
@@ -692,11 +722,15 @@
                 $form = $(document);
             }
 
-            var $inputs = $form.find('input, select, textarea').not('[type="submit"], [type="button"]'),
+            var $inputs = $form.add($form.find('input, select, textarea')).not('[type="submit"], [type="button"]'),
                 data = {};
 
             // update data object with input value
             $inputs.each(function () {
+                if (!/input|select|textarea/i.test(this.nodeName)) {
+                    return;
+                }
+
                 var $input = $(this),
                     attr = $input.attr(attribute),
                     currentDataPoint = data,
@@ -746,11 +780,11 @@
 
             /**
              * check if element is checkbox or radio type
-             * @param elem {HTMLElement|jQuery object}
+             * @param $elem {jQuery object}
              * @return {boolean}
              */
-            isCheckable: function (elem) {
-                return (/radio|checkbox/i).test($(elem).attr('type'));
+            isCheckable: function ($elem) {
+                return (/radio|checkbox/i).test($elem.attr('type'));
             },
 
             /**
@@ -833,17 +867,17 @@
 
                 // if multiple, cycle and add
                 $el.each(function () {
-                    var rules = $(this).data('validation'),
+                    var elemRules = $(this).data('validation'),
                         arr = [],
                         length,
                         i;
 
                     // continue if no validation rules are specified on the element
-                    if (typeof rules === 'undefined') {
+                    if (typeof elemRules === 'undefined') {
                         return;
                     }
 
-                    arr = rules.split(' ');
+                    arr = elemRules.split(' ');
                     length = arr.length;
 
                     for (i = 0; i < length; i += 1) {
@@ -888,7 +922,7 @@
             /**
              * test an individual rule
              * @param $el {jQuery object}
-             * @aram value {string}
+             * @param value {string}
              * @param currentRule {string}
              * @param checkRequired {boolean}: internal only - whether to run a standard check on the required rule
              * @return {string|undefined}: returns the rule if the check fails, otherwise returns nothing
@@ -914,10 +948,10 @@
 
                 // check that the rule exists
                 if (typeof rules[currentRule] !== 'object') {
-                    throw new Error('Validation rule \'' + currentRule + '\' does not exist. Use validation.addTest(\'' + currentRule + '\', function () { /** your test */ }) to add it.');
+                    return app.error('Validation rule \'' + currentRule + '\' does not exist.');
                 }
 
-                // ionly proceed on required rule when called via validation.validate
+                // only proceed on required rule when called via validation.validate
                 if (checkRequired === false && (currentRule === 'required' || currentRule === 'isrequired')) {
                     return;
                 }
@@ -937,10 +971,6 @@
              * @return {boolean|string}: a string containing the failed rule, or true if validation passed
              */
             rules: function ($el, rulesArr, value, checkRequired) {
-                if (typeof value === 'undefined') {
-                    throw new Error('No value provided');
-                }
-
                 var length = rulesArr.length,
                     result = true,
                     i;
@@ -997,46 +1027,52 @@
             },
 
             /**
-             * method to trigger validation based on element - used in API
-             * @param value {HTMLElement|jQuery object|string} optional:
+             * trigger validation based on element(s) or string - when checking a string, also takes a string or array of rules to test
+             * @param value {HTMLElement|jQuery object|string}:
              *      if form element(s) (input, select, textarea), will validate those elements
              *      if any other element, will validate all form elements inside
              *      if given a string, will validate that string against the rules in rules param
              * @param tests {string|array} optional: set of rules to run against the value - defaults to 'required'
              *      if a string, must be space delimited e.g. 'required alpha minlength:5' or ['required', 'alpha', 'minlength:5']
              *      is not used if the value param is not a string
-             * @return {boolean|string}: returns true if all validation has passed (or there were no elements to validate)
-             *      validation assumed to have passed if testing against non-existent rules
-             *      if checking a string and the validation does not pass, will return the first rule that fails
+             * @return {boolean|string}: when validating an element returns true if it it passes, false if not
+             *      when validating a string, returns true if it passes, or the first rule that fails
+             *      true if all validation has passed (or there were no elements to validate)
+             *      validation assumed to have passed if testing a string against non-existent rule(s)
+             *      also returns false if element does not exist, or attempting to validate a null or undefined value
              */
             handle: function (value, tests, checkRequired) {
                 var $elems;
 
-                // handle value variant
-                if (typeof value !== 'object' || value === null) {
-                    // if no rules passed in, assume required only
-                    if (typeof tests === 'undefined' || tests === null || tests === '') {
-                        tests = ['required'];
-                    }
+                // handle null or undefined
+                if (typeof value === 'undefined' || value === null || $.isArray(value)) {
+                    app.error('validation.validate(): First arg must be a string or element');
+                    return false;
+                }
 
-                    // turn into array
-                    if (typeof tests === 'string') {
-                        tests = tests.split(' ');
+                // element case
+                if (typeof value === 'object') {
+                    // if no elements exist, return false
+                    if (!($elems = $(value)).length) {
+                        return false;
                     }
-
-                    // context
-                    return app.validate.rules({}, tests, value, checkRequired || false);
-                } else {
-                    // validate all set forms by default
-                    if (!($elems = $(value || '[data-validation="set"]')).length) {
-                        return true; // if no elements exist, return true
-                    }
-
                     // validate
-                    return (/input|select|textarea/i).test($elems[0].nodeName)
-                        ? !$elems.each(app.validate.element).filter('validation-failed').length
+                    return (/input|select|textarea/i).test($elems[0].nodeName) // assume all are form elements if the first is
+                        ? $elems.each(app.validate.element).filter('.validation-failed').length === 0
                         : app.validate.all.call($elems);
                 }
+
+                // standard value case
+                if (typeof tests === 'undefined' || tests === null || tests === '') {
+                    // if no rules passed in, assume required only
+                    tests = ['required'];
+                }
+                // turn into array
+                if (typeof tests === 'string') {
+                    tests = tests.split(' ');
+                }
+                // set context to an empty object when calling
+                return app.validate.rules({}, tests, value, checkRequired || false);
             }
         },
 
@@ -1092,8 +1128,10 @@
     // expose
     return {
         init: app.init,
+        debug: false,
         addTest: rules.addTest,
         getFormData: app.getFormData,
+        rules: rules.allRules,
         validate: function (value, rules) {
             return app.validate.handle(value, rules, true);
         }

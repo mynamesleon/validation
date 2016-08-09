@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Mocha Tests</title>
+        <title>Validation Tests</title>
         <link rel="stylesheet" href="../node_modules/mocha/mocha.css">
-
         <script src="../node_modules/mocha/mocha.js"></script>
         <script src="../node_modules/chai/chai.js"></script>
         <script>mocha.setup('bdd');</script>
     </head>
     <body>
-        <div id="mocha"></div>
+        <div id="mocha">
+            <h1>Validation Tests</h1>
+        </div>
+
+        <div id="valid-holder" style="display: none;">
+
+        </div>
+        <div id="invalid-holder" style="display: none;">
+
+        </div>
 
         <script src="../node_modules/jquery/dist/jquery.min.js"></script>
         <script src="../dist/validation.min.js"></script>
