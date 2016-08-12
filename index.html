@@ -78,9 +78,14 @@
                         <div class="hidden" data-validation="unchecked">Must be unchecked</div>
                     </div>
                     <div class="form-group">
+                        <label for="checkbox2">Checkbox (must be checked)</label>
+                        <input type="checkbox" name="checkboxes.checked" value="1" data-validation="checked" />
+                        <div class="hidden" data-validation="checked">Must be checked</div>
+                    </div>
+                    <div class="form-group">
                         <label for="dropdown">Dropdown required</label>
                         <select class="form-control" name="dropdown" data-validation="required">
-                            <option value="-1">dropdown</option>
+                            <option value="">dropdown</option>
                             <option value="something">something</option>
                             <option value="something else">something else</option>
                         </select>
@@ -125,24 +130,38 @@
                         </div>
                     </div>
 
+                    <div class="panel panel-default" data-validation="true">
+                        <div class="panel-heading">
+                            Sub form 2 - negating rules
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label for="text-number">Not a number, and not between 4 and 6 characters (not required)</label>
+                                <input class="form-control" type="text" name="text-number" data-validation="!required !number !rangelength:4:6" />
+                                <div class="hidden" data-validation="not-number">The value must not be a number</div>
+                                <div class="hidden" data-validation="not-rangelength">The value must not be between 4 and 6 characters long</div>
+                            </div>
+                            <a class="btn btn-default validation-trigger">custom form trigger (validate section)</a>
+                        </div>
+                    </div>
+
                     <input class="btn btn-default" type="submit" value="form submit (validate everything)" />
                     <a class="btn btn-default validation-trigger">custom form trigger (validate everything)</a>
                 </div>
-                <input type="color" />
             </div>
         </div>
 
     </form>
 
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
-    <script src="src/validation.js"></script>
+    <script src="dist/validation.js"></script>
     <script>
         validation.init();
         $('input, textarea, select').on({
             'validation.failed': function (e, rule) {
                 var $el = $(this);
                 $(this).closest('.form-group').find('div[data-validation]').addClass('hidden')
-                    .filter('[data-validation="' + rule + '"]').first().removeClass('hidden');
+                    .filter('[data-validation="' + rule.replace('!', 'not-') + '"]').first().removeClass('hidden');
             },
             'validation.passed': function () {
                 $(this).closest('.form-group').find('div[data-validation]').addClass('hidden');

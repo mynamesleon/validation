@@ -24,8 +24,8 @@
 }(this, function (root, $) {
     'use strict';
 
-    // todo: add ability to include '!' before any rule to negate it
-    // todo: finish setting up tests for all validation rules
+    // todo: expand on regex rule to allow standard regex format in order to include flags i.e. parse /pattern/flags to new RegExp(pattern, flags)
+    // todo: improve date check by allowing multiple formats, or ability to specify a format
 
     var app = {},
 
@@ -44,9 +44,9 @@
                 validate: function (val) {
                     var $elem = $(this);
 
-                    // handle select - check that a value exists, is not empty, and is not 0 or -1
-                    if ($elem[0].nodeName === 'SELECT') {
-                        return val && val.length > 0 && val !== '0' && val !== '-1';
+                    // handle select
+                    if ($elem.is('select')) {
+                        return val && val.length > 0;
                     }
 
                     // handle radio and checkbox
@@ -54,7 +54,7 @@
                         return $elem.filter(':checked').length > 0;
                     }
 
-                    // handle any non string values
+                    // handle any non string values just in case
                     if (typeof val !== 'string') {
                         return !!val;
                     }
@@ -284,7 +284,8 @@
             },
 
             /**
-             * must be checked
+             * must be checked - becomes an alias for required when used on a radio or checkbox
+             * @param val {string}
              * @return {boolean}
              */
             checked: {
@@ -297,6 +298,7 @@
 
             /**
              * must be unchecked
+             * @param val {string}
              * @return {boolean}
              */
             unchecked: {
@@ -417,20 +419,38 @@
              */
             url: {
                 regex: new RegExp([
-                    '^(?:(?:https?|ftp)://)',
+                    '^',
+                    // protocol identifier
+                    '(?:(?:https?|ftp)://)',
+                    // user:pass authentication
                     '(?:\\S+(?::\\S*)?@)?',
                     '(?:',
+                    // IP address exclusion
+                    // private & local networks
                     '(?!(?:10|127)(?:\\.\\d{1,3}){3})',
                     '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})',
                     '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})',
+                    // IP address dotted notation octets
+                    // excludes loopback network 0.0.0.0
+                    // excludes reserved space >= 224.0.0.0
+                    // excludes network & broacast addresses
+                    // (first & last IP address of each class)
                     '(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])',
                     '(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}',
-                    '(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|',
+                    '(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))',
+                    '|',
+                    // host name
                     '(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)',
+                    // domain name
                     '(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*',
+                    // TLD identifier
                     '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))',
-                    '\\.?)',
+                    // TLD may end with dot
+                    '\\.?',
+                    ')',
+                    // port number
                     '(?::\\d{2,5})?',
+                    // resource path
                     '(?:[/?#]\\S*)?',
                     '$'
                 ].join(''), 'i'),
@@ -669,7 +689,8 @@
             },
 
             /**
-             * generate a space delimited string of all rules
+             * generate array of all available rules to be exposed
+             * generate space delimited string of all rule error classes
              */
             setErrorClassString: function () {
                 var i,
@@ -677,9 +698,10 @@
                     r = ['validation-failed'];
 
                 for (i in rules) {
-                    if (rules.hasOwnProperty(i) && typeof rules[i] === 'object' && !$.isArray(rules[i])) {
-                        a.push(i);
-                        r.push('validation-failed-' + i);
+                    if (rules.hasOwnProperty(i) && typeof rules[i] === 'object' && $.isArray(rules[i]) === false) {
+                        a.push(i); // add to array of rules to be exposed
+                        r.push('validation-failed-' + i); // rule error class
+                        r.push('validation-failed-not-' + i); // negated rule error class
                     }
                 }
 
@@ -847,7 +869,8 @@
                 if (result === true) {
                     $el.triggerHandler('validation.passed');
                 } else {
-                    $el.addClass('validation-failed validation-failed-' + result).triggerHandler('validation.failed', result);
+                    $el.addClass('validation-failed validation-failed-' + (result.indexOf('!') === 0 ? result.replace('!', 'not-') : result))
+                        .triggerHandler('validation.failed', result);
                 }
             },
 
@@ -889,7 +912,7 @@
                         }
                     }
                 });
-                return result.join(' ');
+                return result.join(' ').replace(/!required|!isrequired/g, '');
             }
 
         },
@@ -929,10 +952,12 @@
              */
             rule: function ($el, value, currentRule, checkRequired) {
                 var param,
-                    splitRule;
+                    splitRule,
+                    bool = false;
 
-                // ignore empty strings
-                if (currentRule === '') {
+                // ignore empty strings - result of too many spaces separating rules
+                // if negating required, return immediately so that the value is treated as optional
+                if (currentRule === '' || currentRule === '!required' || currentRule === '!isrequired') {
                     return;
                 }
 
@@ -946,6 +971,11 @@
                 // all validation rules are stored as lower case
                 currentRule = currentRule.toLowerCase().split('{!space}').join(' ');
 
+                if (currentRule.charAt(0) === '!') {
+                    currentRule = currentRule.replace('!', '');
+                    bool = true;
+                }
+
                 // check that the rule exists
                 if (typeof rules[currentRule] !== 'object') {
                     return app.error('Validation rule \'' + currentRule + '\' does not exist.');
@@ -957,8 +987,8 @@
                 }
 
                 // run the check - if it fails, return the rule
-                if (rules[currentRule].validate.call($el, value, param) === false) {
-                    return currentRule;
+                if (rules[currentRule].validate.call($el, value, param) === bool) {
+                    return (bool ? '!' : '') + currentRule;
                 }
             },
 
@@ -994,11 +1024,12 @@
             element: function (e) {
                 var $el = $(this),
                     value = app.element.getValue($el),
+                    isCheckable = app.element.isCheckable($el),
                     result = true,
                     rulesString;
 
-                // handle radio and input types - select all elements with that name
-                if (app.element.isCheckable($el)) {
+                // for radio and input types, select all elements with that name
+                if (isCheckable) {
                     $el = app.element.getByAttribute($el, 'name');
                 }
 
@@ -1007,6 +1038,11 @@
 
                 if ($.trim(rulesString) === '') {
                     return;
+                }
+
+                // if radio or checkbox, make checked an alias for required
+                if (isCheckable) {
+                    rulesString = $.trim((' ' + rulesString + ' ').replace(/ checked | ischecked /i, ' required '));
                 }
 
                 // use required function to check if value is empty
@@ -1028,51 +1064,57 @@
 
             /**
              * trigger validation based on element(s) or string - when checking a string, also takes a string or array of rules to test
-             * @param value {HTMLElement|jQuery object|string}:
+             * @param value {HTMLElement|jQuery object|string|array}:
              *      if form element(s) (input, select, textarea), will validate those elements
              *      if any other element, will validate all form elements inside
-             *      if given a string, will validate that string against the rules in rules param
-             * @param tests {string|array} optional: set of rules to run against the value - defaults to 'required'
-             *      if a string, must be space delimited e.g. 'required alpha minlength:5' or ['required', 'alpha', 'minlength:5']
+             *      if given a string, will validate that string against the rules in tests param
+             *      if array, will cycle through entries running tests against each one
+             * @param tests {string|array} optional: set of rules to run against the value(s)
+             *      use space delimitted string e.g. 'required alpha minlength:5' or array e.g. ['required', 'alpha', 'minlength:5']
              *      is not used if the value param is not a string
-             * @return {boolean|string}: when validating an element returns true if it it passes, false if not
-             *      when validating a string, returns true if it passes, or the first rule that fails
-             *      true if all validation has passed (or there were no elements to validate)
-             *      validation assumed to have passed if testing a string against non-existent rule(s)
-             *      also returns false if element does not exist, or attempting to validate a null or undefined value
+             * @return {boolean|string}: if validating an element, returns true if it it passes, false if not
+             *      if validating a string, returns true if it passes, or the first rule that fails
+             *      if validating an array, returns true if all entries pass the tests, false if any fail
+             *      validation assumed to have passed if testing a string against non-existent rule(s) (unless debugging)
+             *      also returns false if element does not exist
              */
             handle: function (value, tests, checkRequired) {
-                var $elems;
+                var $elems,
+                    i;
 
-                // handle null or undefined
-                if (typeof value === 'undefined' || value === null || $.isArray(value)) {
-                    app.error('validation.validate(): First arg must be a string or element');
-                    return false;
+                // handle null or undefined - force to an empty string to prevent errors
+                if (typeof value === 'undefined' || value === null) {
+                    app.error('validation.validate(): first arg should be a string (or array of strings) or element');
+                    value = '';
                 }
 
-                // element case
-                if (typeof value === 'object') {
-                    // if no elements exist, return false
+                // handle element case - always used internally
+                if (typeof value === 'object' && !$.isArray(value)) {
                     if (!($elems = $(value)).length) {
-                        return false;
+                        app.error('validation.validate(): element could not be found');
                     }
-                    // validate
-                    return (/input|select|textarea/i).test($elems[0].nodeName) // assume all are form elements if the first is
+                    return $elems.is('input, select, textarea')
                         ? $elems.each(app.validate.element).filter('.validation-failed').length === 0
                         : app.validate.all.call($elems);
+                } else {
+                    // value case - accessible from API
+                    tests = tests || '';
+                    // turn into array
+                    if (typeof tests === 'string') {
+                        tests = tests.split(' ');
+                    }
+                    // handle array of values
+                    if ($.isArray(value)) {
+                        for (i = 0; i < value.length; i += 1) {
+                            if (app.validate.handle(value[i], tests, true) !== true) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                    // set context to an empty object when calling
+                    return app.validate.rules({}, tests, value, checkRequired || false);
                 }
-
-                // standard value case
-                if (typeof tests === 'undefined' || tests === null || tests === '') {
-                    // if no rules passed in, assume required only
-                    tests = ['required'];
-                }
-                // turn into array
-                if (typeof tests === 'string') {
-                    tests = tests.split(' ');
-                }
-                // set context to an empty object when calling
-                return app.validate.rules({}, tests, value, checkRequired || false);
             }
         },
 
