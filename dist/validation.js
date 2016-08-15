@@ -391,8 +391,18 @@
             regex: {
                 toStringProto: Object.prototype.toString,
                 validate: function (val, reg) {
+                    var flags,
+                        arr;
+
                     if (typeof reg === 'string') {
-                        return new RegExp(reg).test(val);
+                        if (reg.charAt(0) === '/') {
+                            arr = reg.split('/');
+                            flags = arr.pop();
+                            arr.shift();
+                            reg = arr.join('/');
+                        }
+                        console.log(reg, flags);
+                        return new RegExp(reg, flags).test(val);
                     } else if (rules.regex.toStringProto.call(reg) === '[object RegExp]') {
                         return reg.test(val);
                     }
