@@ -24,7 +24,7 @@
 }(this, function (root, $) {
     'use strict';
 
-    // todo: expand on regex rule to allow standard regex format in order to include flags i.e. parse /pattern/flags to new RegExp(pattern, flags)
+    // todo: have error messages shown/hidden by this script by default
     // todo: improve date check by allowing multiple formats, or ability to specify a format
 
     var app = {},
@@ -36,7 +36,7 @@
         rules = {
 
             /**
-             * required rule stored here to prevent being overidden - called in element context
+             * required
              * @param val {string}
              * @return {boolean}
              */
@@ -44,7 +44,7 @@
                 validate: function (val) {
                     var $elem = $(this);
 
-                    // handle select
+                    // handle select - '0' and '-1' values will still pass, as they may be in intended
                     if ($elem.is('select')) {
                         return val && val.length > 0;
                     }
@@ -106,6 +106,18 @@
             },
 
             /**
+             * match a specific value
+             * @param val {string}
+             * @param match {string}
+             * @return {boolean}
+             */
+            match: {
+                validate: function (val, match) {
+                    return val === match;
+                }
+            },
+
+            /**
              * minimum number
              * @param val {string}
              * @param min {string|number}
@@ -136,24 +148,12 @@
              * @return {boolean}
              */
             range: {
-                separators: /[\,\_\|\:]/g,
+                separators: /[\,\_\|\:]/g, // do not split by hyphen in case negative value is used
                 validate: function (val, range) {
                     var rangeArr = range.replace(rules.range.separators, ' ').split(' '),
                         toCheck = parseFloat(val);
 
                     return toCheck >= parseFloat(rangeArr[0]) && toCheck <= parseFloat(rangeArr[1]);
-                }
-            },
-
-            /**
-             * match a specific value
-             * @param val {string}
-             * @param match {string}
-             * @return {boolean}
-             */
-            match: {
-                validate: function (val, match) {
-                    return val === match;
                 }
             },
 
@@ -192,7 +192,7 @@
             /**
              * range between character length
              * @param val {string}
-             * @param range {string}: space (if not in data attribute), comma, hyphen, underscore, pipe or colon delimited
+             * @param range {string}: comma, hyphen, underscore, pipe or colon delimited
              * @return {boolean}
              */
             rangelength: {
@@ -234,7 +234,7 @@
             /**
              * word count range
              * @param val {string}
-             * @param range {string}: space (if not in data attribute), comma, hyphen, underscore, pipe or colon delimited
+             * @param range {string}: comma, hyphen, underscore, pipe or colon delimited
              * @return {boolean}
              */
             rangewords: {
@@ -260,7 +260,7 @@
             },
 
             /**
-             * integer only (allows negatives)
+             * integer only - allows negatives, but not decimals
              * @param val {string}
              * @return {boolean}
              */
@@ -272,7 +272,7 @@
             },
 
             /**
-             * digits only
+             * digits only - no decimal or negative values allowed
              * @param val {string}
              * @return {boolean}
              */
@@ -315,7 +315,7 @@
              * @param selector {string|jQuery object}: if string, can include basic jQuery methods
              *      e.g. "$(this).parent().prev().find('input[type=\"text\"]')"
              *      deliberately restricted so that each jQuery method used can only take one string paramater
-             *      specific handling is included to handle the 'this' keyword when included on data-validation attribute
+             *      specific handling is included to handle the 'this' keyword in the string
              * @return {boolean}
              */
             confirm: {
@@ -383,9 +383,9 @@
             },
 
             /**
-             * custom regular expression check - must use {!space} for spaces needed in regex
+             * custom regular expression check - must use {!space} for spaces needed in expression
              * @param val {string}
-             * @param reg {string|object}: will be a string when included in the validation data attribute
+             * @param reg {string|object}
              * @return {boolean}
              */
             regex: {
@@ -395,13 +395,13 @@
                         arr;
 
                     if (typeof reg === 'string') {
+                        // if the string begins with '/', format from /regex/flags to new RegExp(regex, flags)
                         if (reg.charAt(0) === '/') {
                             arr = reg.split('/');
                             flags = arr.pop();
                             arr.shift();
                             reg = arr.join('/');
                         }
-                        console.log(reg, flags);
                         return new RegExp(reg, flags).test(val);
                     } else if (rules.regex.toStringProto.call(reg) === '[object RegExp]') {
                         return reg.test(val);
