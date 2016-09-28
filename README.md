@@ -70,24 +70,24 @@ You can also check for the opposite of a rule by including the bang operator (or
 The built in validation rules are as follows:
 
 #### required
-**behaviour:** checks that the element has a value, that at least one checkbox/radio button in the group is selected, that the value of the chosen option in a dropdown is not an empty string (0 or -1 are permitted as they may be intentional)
-**aliases:** isrequired
+- **behaviour:** checks that the element has a value, that at least one checkbox/radio button in the group is selected, that the value of the chosen option in a dropdown is not an empty string (0 or -1 are permitted as they may be intentional)
+- **aliases:** isrequired
 
 #### alpha
-**behaviour:** value does not contain spaces, numbers, or special characters - only letters
-**aliases:** isalpha
+- **behaviour:** value does not contain spaces, numbers, or special characters - only letters
+- **aliases:** isalpha
 
 #### alphanumeric
-**behaviour:** value does not contain spaces, or special characters - only letters and numbers
-**aliases:** isalphanumberic
+- **behaviour:** value does not contain spaces, or special characters - only letters and numbers
+- **aliases:** isalphanumberic
 
 #### email
-**behaviour:** value is a valid email address, [as defined in the HTML spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address), which allows examples such as test@test
-**aliases:** isemail
+- **behaviour:** value is a valid email address, [as defined in the HTML spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address), which allows examples such as test@test
+- **aliases:** isemail
 
 #### match
-**behaviour:** value exactly matches a specific value e.g. 'match:thisvalue' or 'match:this{!space}value{!space}with{!space}spaces'
-**aliases:** matches, equalto, equals, isequalto
+- **behaviour:** value exactly matches a specific value e.g. 'match:thisvalue' or 'match:this{!space}value{!space}with{!space}spaces'
+- **aliases:** matches, equalto, equals, isequalto
 
 #### min
 **behaviour**: number check - value is equal to or greater than the specified number e.g. 'min:5', 'min:-5'
@@ -117,53 +117,53 @@ The built in validation rules are as follows:
 **behaviour**: word count - must have between this many words (inclusive - only positives allowed) e.g. 'rangewords:10:100'
 
 #### number
-**behaviour:** value must be a number (allows trailing or preceding spaces e.g. ' 12.5', '12.5 ')
-**aliases:** numeric, isnumber, isnumeric
+- **behaviour:** value must be a number (allows trailing or preceding spaces e.g. ' 12.5', '12.5 ')
+- **aliases:** numeric, isnumber, isnumeric
 
 #### integer
-**behaviour:** value must be an integer (does not allow preceding or trailing spaces)
-**aliases:** isinteger
+- **behaviour:** value must be an integer (does not allow preceding or trailing spaces)
+- **aliases:** isinteger
 
 #### digits
-**behaviour:** value must only contain digits (forced positive integer check)
-**aliases:** isdigits
+- **behaviour:** value must only contain digits (forced positive integer check)
+- **aliases:** isdigits
 
 #### checked
-**behaviour:** at least one checkbox within the group is selected, or the value is not -1 (this is replaced by a 'required' check internally when used on a radio button or checkbox)
-**aliases:** ischecked
+- **behaviour:** at least one checkbox within the group is selected, or the value is not -1 (this is replaced by a 'required' check internally when used on a radio button or checkbox)
+- **aliases:** ischecked
 
 #### unchecked
-**behaviour:** must not have any checkboxes within the group selected (or value must be -1)
-**aliases:** isunchecked
+- **behaviour:** must not have any checkboxes within the group selected (or value must be -1)
+- **aliases:** isunchecked
 
 #### confirm
-**behaviour:** check that the value matches the value contained inside another input, useful for 'confirm password' or 'confirm email' fields - must be passed a jQuery selector e.g. 'confirm:#an-id', 'confirm:#an-ids>.direct-child', 'confirm:#an-ids{!space}.child'.
+- **behaviour:** check that the value matches the value contained inside another input, useful for 'confirm password' or 'confirm email' fields - must be passed a jQuery selector e.g. 'confirm:#an-id', 'confirm:#an-ids>.direct-child', 'confirm:#an-ids{!space}.child'.
 This can also accept basic jQuery function syntax e.g. 'confirm:$(".element").find(".something")'
 **note:** remember to escape strings as necessary
 
 #### regex
-**behaviour:** check the value against a chosen regular expression e.g. 'regex:^[a-zA-Z0-9]*$' - if you need to include flags, you can use the full regex syntax including slashes e.g. 'regex:/\D/g'
-**aliases:** regexp, pattern, ispattern
+- **behaviour:** check the value against a chosen regular expression e.g. 'regex:^[a-zA-Z0-9]*$' - if you need to include flags, you can use the full regex syntax including slashes e.g. 'regex:/\D/g'
+- **aliases:** regexp, pattern, ispattern
 
 #### date
-**behaviour:** must be a valid date string - simply checks the value against the regular expression `/Invalid|NaN/`
-**aliases:** isdate
+- **behaviour:** must be a valid date string - simply checks the value against the regular expression `/Invalid|NaN/`
+- **aliases:** isdate
 
 #### url
-**behaviour:** must be a valid url
-**aliases:** isurl
+- **behaviour:** must be a valid url
+- **aliases:** isurl
 
 #### ipaddress
-**behaviour:** must be a valid ip address - allows ipv4 or ipv6 addresses, including CIDR notation
-**aliases:** ip, isip, isipaddress
+- **behaviour:** must be a valid ip address - allows ipv4 or ipv6 addresses, including CIDR notation
+- **aliases:** ip, isip, isipaddress
 
 #### creditcard
-**behaviour:** must be a valid credit card number
-**aliases:** iscreditcard
+- **behaviour:** must be a valid credit card number
+- **aliases:** iscreditcard
 
 #### colour
-**behaviour:** must be a valid colour string - allows keywords, hex, hsl, hsla, rgb, and rgba strings by default. Can also specify which type of colours strings to allow e.g. 'colour:hex:rgb:keywords'
-**aliases:** color, iscolor, iscolour
+- **behaviour:** must be a valid colour string - allows keywords, hex, hsl, hsla, rgb, and rgba strings by default. Can also specify which type of colours strings to allow e.g. 'colour:hex:rgb:keywords'
+- **aliases:** color, iscolor, iscolour
 
 ### Custom validation tests
 You can add your own custom rules via the `addTest` method. This accepts two arguments: a string used as the name for the rule (this will be set to lowercase), and the function to run, which needs to return a boolean. The function is also provided 2 arguments: the value to be checked, and any parameters included (as a string). For example, we might add an equivalent of the `match` check as follows:
