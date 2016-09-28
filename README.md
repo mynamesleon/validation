@@ -19,7 +19,8 @@ As well as the `validate` method, the validation library can also makes use of a
 The data API differentiates between **form elements** and **form sections**, allowing you to have nested forms, or clearly separated form sections as necessary. At least one section is required, and change events are then bound to the form elements inside. A section is indicated by setting the attribute to true, e.g. `<form data-validation="true">`. This can be set on any element, but when set on a `<form>` tag it will also attach a submit event to the form, preventing it from submitting if any of the elements inside have failed their respective validation. (Note: after the `init` method is called, the attribute is changed from "true" to "set" to indicate to the script which sections have already had their events bound)
 
 Setting the validation rules on elements is then done in the same way, this time using space delimited sets of rules instead of setting it to true, e.g.
-```html<input type="text" data-validation="required alphanumeric minlength:10" />
+```html
+<input type="text" data-validation="required alphanumeric minlength:10" />
 ```
 Unlike with the `validate` method mentioned above, this time we have to specify if it is a required field, otherwise it is considered optional and the value will only be checked against the validation rules if a value exists, otherwise it will allow the input to remain empty.
 
