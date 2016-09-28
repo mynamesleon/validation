@@ -90,31 +90,31 @@ The built in validation rules are as follows:
 - **aliases:** matches, equalto, equals, isequalto
 
 #### min
-**behaviour**: number check - value is equal to or greater than the specified number e.g. 'min:5', 'min:-5'
+- **behaviour:** number check - value is equal to or greater than the specified number e.g. 'min:5', 'min:-5'
 
 #### max
-**behaviour**: number check - value is equal to or less than the specified number e.g. 'max:5', 'max:-5'
+- **behaviour:** number check - value is equal to or less than the specified number e.g. 'max:5', 'max:-5'
 
 #### range
-**behaviour**: number check - value is equal to or between than the specified numbers e.g. 'range:10:20'
+- **behaviour:** number check - value is equal to or between than the specified numbers e.g. 'range:10:20'
 
 #### minlength
-**behaviour**: character check - value has at least this many characters e.g. 'minlength:10'
+- **behaviour:** character check - value has at least this many characters e.g. 'minlength:10'
 
 #### maxlength
-**behaviour**: character check - value does not exceed this many characters e.g. 'maxlength:200'
+- **behaviour:** character check - value does not exceed this many characters e.g. 'maxlength:200'
 
 #### rangelength
-**behaviour**: character check - number of characters is between the specified numbers (only positives allowed) e.g. 'rangelength:10:200'
+- **behaviour:** character check - number of characters is between the specified numbers (only positives allowed) e.g. 'rangelength:10:200'
 
 #### minwords
-**behaviour**: word count - must have at least this many words e.g. 'minwords:10'
+- **behaviour:** word count - must have at least this many words e.g. 'minwords:10'
 
 #### maxwords
-**behaviour**: word count - must not have more than this many words e.g. 'maxwords:100'
+- **behaviour:** word count - must not have more than this many words e.g. 'maxwords:100'
 
 #### rangewords
-**behaviour**: word count - must have between this many words (inclusive - only positives allowed) e.g. 'rangewords:10:100'
+- **behaviour:** word count - must have between this many words (inclusive - only positives allowed) e.g. 'rangewords:10:100'
 
 #### number
 - **behaviour:** value must be a number (allows trailing or preceding spaces e.g. ' 12.5', '12.5 ')
