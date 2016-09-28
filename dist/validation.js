@@ -24,8 +24,9 @@
 }(this, function (root, $) {
     'use strict';
 
+    // todo: handling for when 'checked' or 'ischecked' is replaced by 'required',
+    //      yet the returned result is 'required', rather than the original validation requirement
     // todo: have error messages shown/hidden by this script by default
-    // todo: improve date check by allowing multiple formats, or ability to specify a format
 
     var app = {},
 
@@ -44,7 +45,7 @@
                 validate: function (val) {
                     var $elem = $(this);
 
-                    // handle select - '0' and '-1' values will still pass, as they may be in intended
+                    // handle select - '0' and '-1' values will still pass, as they may be intended
                     if ($elem.is('select')) {
                         return val && val.length > 0;
                     }
@@ -788,18 +789,18 @@
 
                 // set needed vars for recursive entry creation for chosen attribute
                 attrArray = attr.split('.');
-                length = attrArray.length;
+                length = attrArray.length - 1;
 
                 // set the level in the object that we want to add the new property
-                for (i = 0; i < length - 1; i += 1) {
-                    if (typeof currentDataPoint[attrArray[i]] === 'undefined') {
+                for (i = 0; i < length; i += 1) {
+                    if (typeof currentDataPoint[attrArray[i]] !== 'object') {
                         currentDataPoint[attrArray[i]] = {};
                     }
                     currentDataPoint = currentDataPoint[attrArray[i]];
                 }
 
                 // use length - 1 so the final entry in the array is used as the property name
-                currentDataPoint[attrArray[length - 1]] = app.element.getValue($input, attribute);
+                currentDataPoint[attrArray[length]] = app.element.getValue($input, attribute);
             });
 
             return data;
@@ -961,9 +962,11 @@
              * @return {string|undefined}: returns the rule if the check fails, otherwise returns nothing
              */
             rule: function ($el, value, currentRule, checkRequired) {
-                var param,
+                var bool = false,
+                    splitCurrent,
                     splitRule,
-                    bool = false;
+                    param,
+                    i;
 
                 // ignore empty strings - result of too many spaces separating rules
                 // if negating required, return immediately so that the value is treated as optional
@@ -981,9 +984,11 @@
                 // all validation rules are stored as lower case
                 currentRule = currentRule.toLowerCase().split('{!space}').join(' ');
 
-                if (currentRule.charAt(0) === '!') {
+                // handle exclamation marks before the rule - use loop to handle multiple
+                // e.g. '!!rule!name' equates to 'not not rule!name'
+                while (currentRule.indexOf('!') === 0) {
+                    bool = !bool;
                     currentRule = currentRule.replace('!', '');
-                    bool = true;
                 }
 
                 // check that the rule exists
@@ -1138,13 +1143,17 @@
             // bind full submit handling to the form submit event if using a normal form
             if (this.nodeName === 'FORM') {
                 $form.on('submit', function (e) {
+                    $form.find('[data-validation="set"]').add($form)
+                        .data('validation-submit-attempted', true);
                     return app.validate.handle(this);
                 });
             }
 
             // bind to validation-trigger elements - use the closest form to allow nested forms
             $form.on('click', '.validation-trigger', function (e) {
-                app.validate.handle($(this).closest('[data-validation="set"]'));
+                var $parentForm = $(this).closest('[data-validation="set"]').data('validation-submit-attempted', true);
+                $parentForm.find('[data-validation="set"]').data('validation-submit-attempted', true);
+                app.validate.handle($parentForm);
             });
 
             // bind individual input change events
@@ -1158,7 +1167,11 @@
                         : typeof $(this).data('validation') === 'undefined');
 
                 if (!prevent) {
-                    app.validate.handle(this);
+                    if ($(this).closest('[data-validation="set"]').data('validation-submit-attempted') === true) {
+                        app.validate.handle($(this).closest('[data-validation="set"]'));
+                    } else {
+                        app.validate.handle(this);
+                    }
                 }
             });
         },
