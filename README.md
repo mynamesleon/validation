@@ -139,7 +139,7 @@ The built in validation rules are as follows:
 #### confirm
 - **behaviour:** check that the value matches the value contained inside another input, useful for 'confirm password' or 'confirm email' fields - must be passed a jQuery selector e.g. 'confirm:#an-id', 'confirm:#an-ids>.direct-child', 'confirm:#an-ids{!space}.child'.
 This can also accept basic jQuery function syntax e.g. 'confirm:$(".element").find(".something")'
-**note:** remember to escape strings as necessary
+- **note:** remember to escape strings as necessary
 
 #### regex
 - **behaviour:** check the value against a chosen regular expression e.g. 'regex:^[a-zA-Z0-9]*$' - if you need to include flags, you can use the full regex syntax including slashes e.g. 'regex:/\D/g'
