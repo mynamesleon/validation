@@ -18,14 +18,18 @@ As well as the `validate` method, the validation library can also makes use of a
 
 The data API differentiates between **form elements** and **form sections**, allowing you to have nested forms, or clearly separated form sections as necessary. At least one section is required, and change events are then bound to the form elements inside. A section is indicated by setting the attribute to true, e.g. `<form data-validation="true">`. This can be set on any element, but when set on a `<form>` tag it will also attach a submit event to the form, preventing it from submitting if any of the elements inside have failed their respective validation. (Note: after the `init` method is called, the attribute is changed from "true" to "set" to indicate to the script which sections have already had their events bound)
 
-Setting the validation rules on elements is then done in the same way, this time using space delimited sets of rules instead of setting it to true, e.g. `<input type="text" data-validation="required alphanumeric minlength:10" />`. Unliked with the `validate` method mentioned above, this time we have to specify if it is a required field, otherwise it is considered optional and the value will only be checked against the validation rules if a value exists, otherwise it will allow the input to remain empty.
+Setting the validation rules on elements is then done in the same way, this time using space delimited sets of rules instead of setting it to true, e.g.
+```html<input type="text" data-validation="required alphanumeric minlength:10" />
+```
+Unlike with the `validate` method mentioned above, this time we have to specify if it is a required field, otherwise it is considered optional and the value will only be checked against the validation rules if a value exists, otherwise it will allow the input to remain empty.
 
 Notes:
+
 1. When setting the rules on checkbox or radio button groups, you only have to set the data attribute on one of them, and its validation rules will be applied to the whole group (or you can set it on all of them if you prefer).
 2. If the section you're validating is not a `<form>` tag, you can set the class "validation-trigger" on any buttons, anchors, etc. inside that you want to trigger the validation when clicked.
 3. The rules are separated by spaces, but on occasion you may need to indicate that a space is supposed to be included for certain rule parameters, or if a custom rule has been added that included a space in the name. This can be indicated via the following: "{!space}". E.g.
 ```html
-`<input type="text" data-validation="required custom{!space}rule matches:this{!space}text" />`
+<input type="text" data-validation="required custom{!space}rule matches:this{!space}text" />
 ```
 
 ##### validate method again
@@ -39,9 +43,19 @@ validation.validate(document.getElementsByTagName('input'));
 ##### classnames and jQuery events
 There are no specific classes added if the validation passes, only if it fails. A generic "validation-failed" class is added to both form elements and sections that fail validation. An additional class is added to the form elements based on the validation rule that failed e.g. "validation-failed-alpha".
 
-Custom jQuery events are triggered on the form elements and sections to indicate if validation has passed or failed via `validation.passed` and `validation.failed` events respectively. When triggered on a section the event is passed the form data within that section as a JavaScript object,
+Custom jQuery events are triggered on the form elements and sections to indicate if validation has passed or failed via `validation.passed` and `validation.failed` events respectively. When triggered on a section the event is passed the form data within that section as a JavaScript object, and when the `validation.failed` event fires on a form element, it is passed the rule that failed e.g.
+
+```js
+$('form').on('validation.passed', function (formData) {
+    // use the formData in some way
+});
+$('input').on('validation.failed', function (failedRule) {
+    // use the failed rule in some way
+});
+```
 
 Things to consider when using the custom events:
+
 1. The events do not bubble
 2. When the validation for a section is triggered, the appropriate event fires on the closest parent form section only - it does not fire on any other sections further up the DOM tree, or on any of its descendants (the same principle applies to the "validation-failed" class)
 3. The events will always fire on form elements before they fire on the parent section
@@ -159,6 +173,7 @@ The function returns a boolean indicating if your test was successfully added, a
 By default, the script handles potential errors silently, but you can enable debug mode if necessary (advised for development only) via by setting the `debug` property to a truthy value e.g. `validation.debug = true;`.
 
 Example errors this will highlight that would otherwise be handled silently:
+
 1. if the `validate` method is passed a null or undefined value, or a non-existing element
 2. if attempting to add a test without a name and/or function specified for it
 3. if attempting to test a value against a non-existing rule
