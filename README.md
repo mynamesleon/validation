@@ -172,7 +172,7 @@ This can also accept basic jQuery function syntax, where `$(this)` will select t
 - **note:** remember to escape strings as necessary and use {!space} to indicate spaces
 
 #### date
-- **behaviour:** must be a valid date string - simply checks the value against the regular expression `/Invalid|NaN/`
+- **behaviour:** must be a valid date string - simply checks the value against the regular expression `/Invalid|NaN/`. Can also check for an ISO date by specifying this after the rule e.g. 'date:iso'
 - **aliases:** isdate
 
 #### url

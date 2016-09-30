@@ -431,7 +431,11 @@
              */
             date: {
                 regex: /Invalid|NaN/,
-                validate: function (val) {
+                isoregex: /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/,
+                validate: function (val, iso) {
+                    if (iso === 'iso') {
+                        return rules.date.isoregex.test(val);
+                    }
                     return !rules.date.regex.test(new Date(val).toString());
                 }
             },
@@ -536,6 +540,8 @@
                             if (expr[thisType].test(val)) {
                                 return true;
                             }
+                        } else {
+                            app.error('ipaddress validation rule: the specified type \'' + thisType + '\' is not checkable');
                         }
                     }
 
@@ -674,6 +680,8 @@
                                     return true;
                                 }
                             }
+                        } else {
+                            app.error('colour validation rule: the specified type \'' + thisType + '\' is not checkable');
                         }
                     }
 
