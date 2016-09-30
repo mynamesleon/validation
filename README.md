@@ -162,13 +162,14 @@ The built in validation rules are as follows:
 - **aliases:** ismac
 
 #### confirm
-- **behaviour:** check that the value matches the value contained inside another input, useful for 'confirm password' or 'confirm email' fields - must be passed a jQuery selector e.g. 'confirm:#an-id', 'confirm:#an-ids>.direct-child', 'confirm:#an-ids{!space}.child'.
-This can also accept basic jQuery function syntax e.g. 'confirm:$(".element").find(".something")'
+- **behaviour:** check that the value matches the value of another field; useful for 'confirm password' or 'confirm email' fields - must be passed a selector e.g. 'confirm:#an-id', 'confirm:#an-ids>.direct-child', 'confirm:#an-ids{!space}.child'.
+This can also accept basic jQuery function syntax, where `$(this)` will select the current field e.g. 'confirm:$(this).next(".field").find("input")'
 - **note:** remember to escape strings as necessary
 
 #### regex
 - **behaviour:** check the value against a chosen regular expression e.g. 'regex:^[a-zA-Z0-9]*$' - if you need to include flags, you can use the full regex syntax including slashes e.g. 'regex:/\D/g'
 - **aliases:** regexp, pattern, ispattern
+- **note:** remember to escape strings as necessary and use {!space} to indicate spaces
 
 #### date
 - **behaviour:** must be a valid date string - simply checks the value against the regular expression `/Invalid|NaN/`
@@ -179,7 +180,7 @@ This can also accept basic jQuery function syntax e.g. 'confirm:$(".element").fi
 - **aliases:** uri, isurl, isuri
 
 #### ipaddress
-- **behaviour:** must be a valid ip address - allows ipv4 or ipv6 addresses, including CIDR notation
+- **behaviour:** must be a valid ip address - allows ipv4 or ipv6 addresses (including CIDR notation) by default; you can also check for a specific type by specifying it after the rule e.g. 'ipaddress:ipv4'
 - **aliases:** ip, isip, isipaddress
 
 #### creditcard
