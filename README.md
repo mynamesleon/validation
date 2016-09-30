@@ -62,6 +62,27 @@ Things to consider when using the custom events:
 3. The events will always fire on form elements before they fire on the parent section
 4. After an attempt has been made to submit a section, change events on form elements within that section will trigger the validation for the entire section, including all form elements inside it. This is done to enable certain expected behaviours, such as comparing the values of two fields
 
+### Form Data
+Although the library does not include any built in functionality to send data to the server, it was still built with this in mind by automatically providing the form data to you for the elements inside of a section in the `validation.passed`. You can also get this data whenever you like using the `getFormData` method by passing in the parent section - by default it will get the form data of all validation sections if no argument is provided (and if no validation sections can be found, it will get the data for all form elements on the page).
+
+This returns an object, using the form element names as keys. Deeper object structures are also possible in case your model requires it by using dots or square braces in the name attribute like so:
+
+```html
+<input type="checkbox" name="checkboxes.group1" />
+<input type="checkbox" name="[checkboxes][group2]" />
+```
+
+All values are returned as strings, and are comma separated if there are multiple values, such as for a multiselect or checkbox group. For example, the resulting object from calling `validation.getFormData()` for our checkboxes above might include the following:
+
+```js
+{
+    checkboxes: {
+        group1: "-1", // none selected
+        group2: "multiple,selected" // multiple selected
+    }
+}
+```
+
 ### Validation Rules
 There are a selection of built in validation rules, as well as the ability to add your own custom rules if necessary. If you are unsure of what of values might pass or fail certain rules, there are many examples in `test/tests.js`.
 
@@ -166,7 +187,7 @@ This can also accept basic jQuery function syntax e.g. 'confirm:$(".element").fi
 - **aliases:** color, iscolor, iscolour
 
 ### Custom validation tests
-You can add your own custom rules via the `addTest` method. This accepts two arguments: a string used as the name for the rule (this will be set to lowercase), and the function to run, which needs to return a boolean. The function is also provided 2 arguments: the value to be checked, and any parameters included (as a string). For example, we might add an equivalent of the `match` check as follows:
+You can add your own custom rules via the `addTest` method. This accepts two arguments: a string used as the name for the rule (this will be set to lowercase), and the function to run, which needs to return a boolean. The function is also provided 2 arguments: the value to be checked, and any parameters included (as a string). For example, we might add our own equivalent of the `match` check called "customtest" as follows:
 
 ```js
 validation.addTest('customtest', function (val, match) {
@@ -175,6 +196,8 @@ validation.addTest('customtest', function (val, match) {
 ```
 
 The function returns a boolean indicating if your test was successfully added, and can then be used either via the `validate` method: `validation.validate(value, customtest:something)` or included in the data attribute in your HTML: `<input type="text" data-validation="required customtest:something" />`
+
+All currently available rules (including all aliases) are stored in a `rules` array on the `validation` object for reference. This is automatically updated any time a rule is added. So you can also check here to see that your custom rule has been added.
 
 ### debug mode
 By default, the script handles potential errors silently, but you can enable debug mode if necessary (advised for development only) by setting the `debug` property to a truthy value e.g. `validation.debug = true;`.
@@ -191,18 +214,23 @@ For reference, the global validation object that is exposed is as follows:
 {
     // initialises the data-attribute variant
     init: function () {},
+
     // used to enable/disable debug mode to show errors rather than fail silently
     debug: false,
+
     // used to add a custom test to the set of rules - the name will be set to lowercase
     addTest: function (testName, testFunction) {},
+
     // get all of the form data as a JavaScript object inside of a specified element
-    // will select all form elements by default of no context point is provided
+    // will select all form elements inside validation sections by default if no context point is provided
+    // if no validation sections can be found, will set the document to be the context
     getFormData: function ($context) {},
-    // an array of all the available rules, including aliases
-    // the array is also updated every time a custom test is added
+
+    // an array of all the available rules, including aliases - updated every time a custom test is added
     rules: [],
-    // run certain rules against a value or set of values
-    // or trigger validation on form elements (or descendant form elements of a parent item)
+
+    // run certain rules against a value or set of values - validation.validate(value, rules);
+    // or trigger validation on form elements (or descendant form elements) - validation.validate($elem);
     validate: function (value, rules) {}
 }
 ```

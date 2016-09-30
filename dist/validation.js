@@ -746,7 +746,7 @@
          */
         getFormData: function ($form, attribute) {
             // handle defaults
-            $form = $form || $('[data-validation="set"]');
+            $form = $($form || '[data-validation="set"]');
             attribute = attribute || 'name';
 
             // default to finding all inouts on the page if no validation has been set
