@@ -26,7 +26,6 @@
 
     // todo: handling for when 'checked' or 'ischecked' is replaced by 'required',
     //      yet the returned result is 'required', rather than the original validation requirement
-    // todo: have error messages shown/hidden by this script by default
 
     var app = {},
 
@@ -873,7 +872,9 @@
              */
             setClasses: function ($el, result) {
                 // remove all rule classes e.g. failed-number
-                $el.removeClass(rules.errorClassString);
+                // look for error messages by name attribute first, then check id
+                var attr = $el.removeClass(rules.errorClassString).attr('name') || $el.attr('id'),
+                    $errors = attr ? $('[data-validation-for="' + attr + '"]') : undefined;
 
                 // toggle remaining needed classes and trigger validation event
                 // use triggerHandler to prevent event bubbling
@@ -882,6 +883,14 @@
                 } else {
                     $el.addClass('validation-failed validation-failed-' + (result.indexOf('!') === 0 ? result.replace('!', 'not-') : result))
                         .triggerHandler('validation.failed', result);
+                }
+
+                // if any error messages exist, hide them, and show the correct one if validation failed
+                if ($errors && $errors.length) {
+                    $errors.hide();
+                    if (result !== true) {
+                        $errors.filter('[data-validation="' + result + '"]').show();
+                    }
                 }
             },
 

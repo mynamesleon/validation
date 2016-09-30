@@ -65,7 +65,7 @@ Things to consider when using the custom events:
 ### Validation Rules
 There are a selection of built in validation rules, as well as the ability to add your own custom rules if necessary. If you are unsure of what of values might pass or fail certain rules, there are many examples in `test/tests.js`.
 
-You can also check for the opposite of a rule by including the bang operator (or logical-not operator) before it e.g. '!email'. If you do this for the 'required' rule, this is treated as the field being optional (rather than needing to be empty).
+You can also check for the opposite of a rule by including the bang operator (or logical-not operator) before it e.g. '!email'. In this case the rule passed to the function bound to the `validation.failed` event would be '!email', but the class added to the input would be "validation-failed-not-email". You should also note that if you do this for the 'required' rule, this is treated as the field being optional (rather than needing to be empty).
 
 The built in validation rules are as follows:
 
@@ -177,7 +177,7 @@ validation.addTest('customtest', function (val, match) {
 The function returns a boolean indicating if your test was successfully added, and can then be used either via the `validate` method: `validation.validate(value, customtest:something)` or included in the data attribute in your HTML: `<input type="text" data-validation="required customtest:something" />`
 
 ### debug mode
-By default, the script handles potential errors silently, but you can enable debug mode if necessary (advised for development only) via by setting the `debug` property to a truthy value e.g. `validation.debug = true;`.
+By default, the script handles potential errors silently, but you can enable debug mode if necessary (advised for development only) by setting the `debug` property to a truthy value e.g. `validation.debug = true;`.
 
 Example errors this will highlight that would otherwise be handled silently:
 

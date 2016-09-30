@@ -6,12 +6,13 @@
     <style>
         input.validation-failed,
         select.validation-failed,
-        textarea.validation-failed,
-        .form-group div[data-validation] {
-            color: red;
+        textarea.validation-failed {
             border-color: red;
         }
-        .hidden { display: none; }
+        [data-validation-for] {
+            display: none;
+            color: red;
+        }
     </style>
 </head>
 
@@ -27,60 +28,60 @@
                     <div class="form-group">
                         <label for="text-number">Number between 4 and 20 (inclusive), not required</label>
                         <input class="form-control" type="text" name="text-number" data-validation="number min:4 max:20" />
-                        <div class="hidden" data-validation="number">Must be a number</div>
-                        <div class="hidden" data-validation="min">Minimum of 4</div>
-                        <div class="hidden" data-validation="max">Maximum of 20</div>
+                        <div data-validation-for="text-number" data-validation="number">Must be a number</div>
+                        <div data-validation-for="text-number" data-validation="min">Minimum of 4</div>
+                        <div data-validation-for="text-number" data-validation="max">Maximum of 20</div>
                     </div>
                     <div class="form-group">
                         <label for="text-length">Text between 5 and 200 characters, not required</label>
                         <input class="form-control" type="text" name="text-length" data-validation="minlength:5 maxlength:200" />
-                        <div class="hidden" data-validation="minlength">Minimum 5 characters</div>
-                        <div class="hidden" data-validation="maxlength">Maximum 200 characters</div>
+                        <div data-validation-for="text-length" data-validation="minlength">Minimum 5 characters</div>
+                        <div data-validation-for="text-length" data-validation="maxlength">Maximum 200 characters</div>
                     </div>
                     <div class="form-group">
                         <label for="text-required-length">Text between 5 and 200 characters, required</label>
                         <input class="form-control" type="text" name="text-required-length" data-validation="required minlength:5 maxlength:200" />
-                        <div class="hidden" data-validation="required">Required</div>
-                        <div class="hidden" data-validation="minlength">Minimum 5 characters</div>
-                        <div class="hidden" data-validation="maxlength">Maximum 200 characters</div>
+                        <div data-validation-for="text-required-length" data-validation="required">Required</div>
+                        <div data-validation-for="text-required-length" data-validation="minlength">Minimum 5 characters</div>
+                        <div data-validation-for="text-required-length" data-validation="maxlength">Maximum 200 characters</div>
                     </div>
                     <div class="form-group">
                         <label for="email">Email required</label>
                         <input class="form-control" type="email" name="email" data-validation="required email" />
-                        <div class="hidden" data-validation="required">Required</div>
-                        <div class="hidden" data-validation="email">Please enter an email address</div>
+                        <div data-validation-for="email" data-validation="required">Required</div>
+                        <div data-validation-for="email" data-validation="email">Please enter an email address</div>
                     </div>
                     <div class="form-group">
                         <label for="email-confirm">Confirm email required</label>
                         <input class="form-control" type="email" name="email-confirm" data-validation="required email confirm:$(this).parent().prev('.form-group').find('input')" />
-                        <div class="hidden" data-validation="required">Required</div>
-                        <div class="hidden" data-validation="email">Please enter an email address</div>
-                        <div class="hidden" data-validation="confirm">The values do not match</div>
+                        <div data-validation-for="email-confirm" data-validation="required">Required</div>
+                        <div data-validation-for="email-confirm" data-validation="email">Please enter an email address</div>
+                        <div data-validation-for="email-confirm" data-validation="confirm">The values do not match</div>
                     </div>
                     <div class="form-group">
                         <label for="radio">Radio button group required, must be second input</label>
                         <input type="radio" id="radio1" name="radio" value="1" data-validation="required" />
                         <input type="radio" id="radio2" name="radio" value="2" data-validation="match:2" />
-                        <div class="hidden" data-validation="required">Required</div>
-                        <div class="hidden" data-validation="match">Value must be 2</div>
+                        <div data-validation-for="radio" data-validation="required">Required</div>
+                        <div data-validation-for="radio" data-validation="match">Value must be 2</div>
                     </div>
                     <div class="form-group">
                         <label for="checkbox2">Checkbox group required</label>
                         <input type="checkbox" name="checkboxes[group]" value="1" data-validation="required minlength:2" />
                         <input type="checkbox" name="checkboxes[group]" value="2" />
                         <input type="checkbox" name="checkboxes[group]" value="3" />
-                        <div class="hidden" data-validation="required">Required</div>
-                        <div class="hidden" data-validation="minlength">Please select at least 2</div>
+                        <div data-validation-for="checkboxes[group]" data-validation="required">Required</div>
+                        <div data-validation-for="checkboxes[group]" data-validation="minlength">Please select at least 2</div>
                     </div>
                     <div class="form-group">
                         <label for="checkbox2">Checkbox (must be unchecked)</label>
                         <input type="checkbox" name="checkboxes.unchecked" value="1" data-validation="unchecked" />
-                        <div class="hidden" data-validation="unchecked">Must be unchecked</div>
+                        <div data-validation-for="checkboxes.unchecked" data-validation="unchecked">Must be unchecked</div>
                     </div>
                     <div class="form-group">
                         <label for="checkbox2">Checkbox (must be checked)</label>
                         <input type="checkbox" name="checkboxes.checked" value="1" data-validation="checked" />
-                        <div class="hidden" data-validation="checked">Must be checked</div>
+                        <div data-validation-for="checkboxes.checked" data-validation="checked">Must be checked</div>
                     </div>
                     <div class="form-group">
                         <label for="dropdown">Dropdown required</label>
@@ -89,7 +90,7 @@
                             <option value="something">something</option>
                             <option value="something else">something else</option>
                         </select>
-                        <div class="hidden" data-validation="required">Required</div>
+                        <div data-validation-for="dropdown" data-validation="required">Required</div>
                     </div>
 
                     <div class="panel panel-default" data-validation="true">
@@ -99,32 +100,32 @@
                         <div class="panel-body">
                             <div class="form-group">
                                 <label for="text-number">Number between 1 and 4 (inclusive), required</label>
-                                <input class="form-control" type="text" name="text-number" data-validation="number required range:1:4" />
-                                <div class="hidden" data-validation="required">Required</div>
-                                <div class="hidden" data-validation="number">Must be a number</div>
-                                <div class="hidden" data-validation="range">Must be between 1 and 4</div>
+                                <input class="form-control" type="text" name="text-number-range" data-validation="number required range:1:4" />
+                                <div data-validation-for="text-number-range" data-validation="required">Required</div>
+                                <div data-validation-for="text-number-range" data-validation="number">Must be a number</div>
+                                <div data-validation-for="text-number-range" data-validation="range">Must be between 1 and 4</div>
                             </div>
                             <div class="form-group">
                                 <label for="text-number">Colour (rgb, or rgba only), required</label>
-                                <input class="form-control" type="text" name="text-number" data-validation="colour:rgb:rgba required" />
-                                <div class="hidden" data-validation="required">Required</div>
-                                <div class="hidden" data-validation="colour">Must be rgb or rgba colour string</div>
+                                <input class="form-control" type="text" name="text-colour-specific" data-validation="colour:rgb:rgba required" />
+                                <div data-validation-for="text-colour-specific" data-validation="required">Required</div>
+                                <div data-validation-for="text-colour-specific" data-validation="colour">Must be rgb or rgba colour string</div>
                             </div>
                             <div class="form-group">
                                 <label for="text-number">Colour (hex, rgb, rgba, hsl, hsla, or keywords), not required</label>
-                                <input class="form-control" type="text" name="text-number" data-validation="colour" />
-                                <div class="hidden" data-validation="colour">Must be a valid colour string</div>
+                                <input class="form-control" type="text" name="text-colour" data-validation="colour" />
+                                <div data-validation-for="text-colour" data-validation="colour">Must be a valid colour string</div>
                             </div>
                             <div class="form-group">
                                 <label for="text-number">Password, required</label>
                                 <input class="form-control" type="password" name="password" id="password" data-validation="required" />
-                                <div class="hidden" data-validation="required">Required</div>
+                                <div data-validation-for="password" data-validation="required">Required</div>
                             </div>
                             <div class="form-group">
                                 <label for="text-number">Confirm password, required</label>
                                 <input class="form-control" type="password" name="confirm-password" data-validation="required confirm:$('#password')" />
-                                <div class="hidden" data-validation="required">Required</div>
-                                <div class="hidden" data-validation="confirm">The passwords must match</div>
+                                <div data-validation-for="confirm-password" data-validation="required">Required</div>
+                                <div data-validation-for="confirm-password" data-validation="confirm">The passwords must match</div>
                             </div>
                             <a class="btn btn-default validation-trigger">custom form trigger (validate section)</a>
                         </div>
@@ -137,9 +138,9 @@
                         <div class="panel-body">
                             <div class="form-group">
                                 <label for="text-number">Not a number, and not between 4 and 6 characters (not required)</label>
-                                <input class="form-control" type="text" name="text-number" data-validation="!required !number !rangelength:4:6" />
-                                <div class="hidden" data-validation="not-number">The value must not be a number</div>
-                                <div class="hidden" data-validation="not-rangelength">The value must not be between 4 and 6 characters long</div>
+                                <input class="form-control" type="text" name="text-not-example" data-validation="!required !number !rangelength:4:6" />
+                                <div data-validation-for="text-not-example" data-validation="!number">The value must not be a number</div>
+                                <div data-validation-for="text-not-example" data-validation="!rangelength">The value must not be between 4 and 6 characters long</div>
                             </div>
                             <a class="btn btn-default validation-trigger">custom form trigger (validate section)</a>
                         </div>
@@ -157,16 +158,6 @@
     <script src="dist/validation.js"></script>
     <script>
         validation.init();
-        $('input, textarea, select').on({
-            'validation.failed': function (e, rule) {
-                var $el = $(this);
-                $(this).closest('.form-group').find('div[data-validation]').addClass('hidden')
-                    .filter('[data-validation="' + rule.replace('!', 'not-') + '"]').first().removeClass('hidden');
-            },
-            'validation.passed': function () {
-                $(this).closest('.form-group').find('div[data-validation]').addClass('hidden');
-            }
-        });
     </script>
 </body>
 
