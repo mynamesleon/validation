@@ -341,6 +341,17 @@ describe('For the main rules it...', function () {
         expect(validation.validate('1', rule)).to.equal(rule);
     });
 
+    it('should be able to validate a mac address', function () {
+        var rule = 'mac';
+        ['F2-ED-90-51-EF-EE', '69-9f-24-c3-ef-b2', '87:06:35:E0:80:31',
+         '5f:61:b0:d3:69:bd', '7BDE.5D7F.2DE8', '906b.6f22.40bb'].forEach(function (i) {
+            expect(validation.validate(i, rule)).to.equal(true);
+        });
+        ['*9-9)-24-(3-ef-b2', '87:06:35', 'testingtesting', 'lOrEmIpSuM', '872d43413da1'].forEach(function (i) {
+            expect(validation.validate(i, rule)).to.equal(rule);
+        });
+    });
+
     it('should be able to confirm that a value matches that of another form element (that exists on the page)', function () {
         var $input = createInput('text', 'required', 'value in here'),
             id = $input.attr('id');

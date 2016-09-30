@@ -310,6 +310,21 @@
             },
 
             /**
+             * mac address validation
+             * @param val {string}
+             * @return {boolean}
+             */
+            mac: {
+                regex: [
+                    /^([0-9A-Fa-f]{2}[:\-]){5}([0-9A-Fa-f]{2})$/,
+                    /^([0-9A-Fa-f]{4}\.){2}([0-9A-Fa-f]{4})$/
+                ],
+                validate: function (val) {
+                    return rules.mac.regex[0].test(val) || rules.mac.regex[1].test(val);
+                }
+            },
+
+            /**
              * test value against the value of another input - must use {!space} for spaces needed in the selector
              * @param val {string}
              * @param selector {string|jQuery object}: if string, can include basic jQuery methods
@@ -680,11 +695,12 @@
                     thisAlias,
                     aliases = [
                         'required', 'alpha', 'alphanumeric', 'email', 'equalto', 'format', 'pattern', 'number', 'numeric', 'integer',
-                        'digits', 'ip', 'ipaddress', 'checked', 'unchecked', 'date', 'url', 'creditcard', 'color', 'colour'
+                        'digits', 'ip', 'ipaddress', 'checked', 'unchecked', 'mac', 'date', 'url', 'uri', 'creditcard', 'color', 'colour'
                     ],
                     length = aliases.length;
 
                 // set specific aliases
+                rules.uri = rules.url;
                 rules.ip = rules.ipaddress;
                 rules.color = rules.colour;
                 rules.numeric = rules.number;

@@ -84,7 +84,7 @@ All values are returned as strings, and are comma separated if there are multipl
 ```
 
 ### Validation Rules
-There are a selection of built in validation rules, as well as the ability to add your own custom rules if necessary. If you are unsure of what of values might pass or fail certain rules, there are many examples in `test/tests.js`.
+There are a selection of built in validation rules, as well as the ability to add your own custom rules if necessary. If you are unsure of what values might pass or fail certain rules, there are many examples in `test/tests.js`.
 
 You can also check for the opposite of a rule by including the bang operator (or logical-not operator) before it e.g. '!email'. In this case the rule passed to the function bound to the `validation.failed` event would be '!email', but the class added to the input would be "validation-failed-not-email". You should also note that if you do this for the 'required' rule, this is treated as the field being optional (rather than needing to be empty).
 
@@ -157,6 +157,10 @@ The built in validation rules are as follows:
 - **behaviour:** must not have any checkboxes within the group selected (or value must be -1)
 - **aliases:** isunchecked
 
+#### mac
+- **behaviour:** must be a mac address - allows colon or hyphen delimited sets of 2, or dot delimited sets of 4 (the 12 character unseparated format will fail e.g. 35B7CDB4F3EB)
+- **aliases:** ismac
+
 #### confirm
 - **behaviour:** check that the value matches the value contained inside another input, useful for 'confirm password' or 'confirm email' fields - must be passed a jQuery selector e.g. 'confirm:#an-id', 'confirm:#an-ids>.direct-child', 'confirm:#an-ids{!space}.child'.
 This can also accept basic jQuery function syntax e.g. 'confirm:$(".element").find(".something")'
@@ -172,7 +176,7 @@ This can also accept basic jQuery function syntax e.g. 'confirm:$(".element").fi
 
 #### url
 - **behaviour:** must be a valid url
-- **aliases:** isurl
+- **aliases:** uri, isurl, isuri
 
 #### ipaddress
 - **behaviour:** must be a valid ip address - allows ipv4 or ipv6 addresses, including CIDR notation
