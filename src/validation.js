@@ -24,9 +24,6 @@
 }(this, function (root, $) {
     'use strict';
 
-    // todo: handling for when 'checked' or 'ischecked' is replaced by 'required',
-    //      yet the returned result is 'required', rather than the original validation requirement
-
     var app = {},
 
         /**

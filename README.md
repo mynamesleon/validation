@@ -1,4 +1,4 @@
-# validation - work in progress
+# validation
 A simple client side validation library that both does and doesn't interfere.
 
 It doesn't attach itself to input change events or form submit events, nor does it manipulate the DOM for you by automatically displaying errors or setting classnames... unless you want it to...
@@ -6,14 +6,14 @@ It doesn't attach itself to input change events or form submit events, nor does 
 You can either use the exposed `validate` method to check a value against a set of rules, and then set classes/display error messages as you please based on the result, or you can trigger the validation using data attributes in your HTML and have it set classes and display errors for you.
 
 ### Usage
-#### validate method
+#### Validate Method
 You can test values against the built-in rules manually using `validation.validate(value, rules)` where `value` is a string and `rules` is either a space-delimited set of rules, or an array of rules, e.g. `validation.validate(value, 'alpha alphanumeric')` - the library will then test the value against the chosen rules in sequence, returning `true` if the value passes all of the provided rules, or it will return the first failed rule as a string. E.g. `validation.validate('test', 'email')` will return `'email'`, but `validation.validate('lorem@ipsum.dolor', 'email')` will return `true`.
 
 Certain rules might require additional parameters such as `minlength` or `maxwords` - these can be provided to the rule via a simple colon syntax e.g. `validation.validate(value, ['minlength:5', 'maxlength:200'])` (this example can also be achieved via `validation.validate(value, 'rangelength:5:200')`).
 
 The `validate` method can also accept an array of values to check against the specified rules. In this case, the method only returns a boolean - `true` if all of the values have passed, `false` if any one of them fails.
 
-#### data attributes
+#### Data Attributes
 As well as the `validate` method, the validation library can also makes use of a data attribute API to run client side validation on your forms for you, attaching all of the necessary JavaScript events and setting error classes automatically - all you have to do is use the `data-validation` attribute on the relevant elements in your HTML, and then initialise it using `validation.init()`.
 
 The data API differentiates between **form elements** and **form sections**, allowing you to have nested forms, or clearly separated form sections as necessary. At least one section is required, and change events are then bound to the form elements inside. A section is indicated by setting the attribute to true, e.g. `<form data-validation="true">`. This can be set on any element, but when set on a `<form>` tag it will also attach a submit event to the form, preventing it from submitting if any of the elements inside have failed their respective validation. (Note: after the `init` method is called, the attribute is changed from "true" to "set" to indicate to the script which sections have already had their events bound)
@@ -33,7 +33,7 @@ Notes:
 <input type="text" data-validation="required custom{!space}rule matches:this{!space}text" />
 ```
 
-#### validate method again
+#### Validate Method Again
 As well as its usage specified above, the `validate` method can take an element, or sets of elements, to have their validation manually triggered. It can accept jQuery objects, or standard HTML element collections. If form elements are passed to the method (inputs, selects, textareas), it will trigger the validation rules for each of them specified in their data attribute. If any other HTML element is passed to it, it will find any form elements inside and validate them. E.g.
 
 ```js
@@ -41,7 +41,7 @@ validation.validate($('form'));
 validation.validate(document.getElementsByTagName('input'));
 ```
 
-#### classnames and jQuery events
+#### Classnames and jQuery Events
 There are no specific classes added if the validation passes, only if it fails. A generic "validation-failed" class is added to both form elements and sections that fail validation. An additional class is added to the form elements based on the validation rule that failed e.g. "validation-failed-alpha".
 
 Custom jQuery events are triggered on the form elements and sections to indicate if validation has passed or failed via `validation.passed` and `validation.failed` events respectively. When triggered on a section the event is passed the form data within that section as a JavaScript object, and when the `validation.failed` event fires on a form element, it is passed the rule that failed e.g.
@@ -61,6 +61,24 @@ Things to consider when using the custom events:
 2. When the validation for a section is triggered, the appropriate event fires on the closest parent form section only - it does not fire on any other sections further up the DOM tree, or on any of its descendants (the same principle applies to the "validation-failed" class)
 3. The events will always fire on form elements before they fire on the parent section
 4. After an attempt has been made to submit a section, change events on form elements within that section will trigger the validation for the entire section, including all form elements inside it. This is done to enable certain expected behaviours, such as comparing the values of two fields
+
+#### Error Messages
+Data attributes can also be used to indicate field error messages to be shown/hidden, using the "data-validation" attribute to indicate what validation rule the message relates to, and a "data-validation-for" attribute containing the form element's name to indicate which field the message relates to. The validation script will search for an element using the "name" attribute first, and will search for a matching "id" if one with a matching "name" isn't found. For example, your HTML might look like the following:
+
+```html
+<div class="form-group">
+    <div class="field">
+        <input type="text" name="description" data-validation="required minwords:100 maxwords:200" class="form-control" />
+    </div>
+    <div class="errors">
+        <div data-validation-for="description" data-validation="required" class="alert alert-danger">This field is required</div>
+        <div data-validation-for="description" data-validation="minwords" class="alert alert-danger">Please enter at least 100 words</div>
+        <div data-validation-for="description" data-validation="maxwords" class="alert alert-danger">Please enter no more than 200 words</div>
+    </div>
+</div>
+```
+
+You'll need to add some CSS to hide your error messages by default, but the validation script will handle their visibility from there using jQuery's `.show()` and `.hide()` methods.
 
 ### Form Data
 Although the library does not include any built in functionality to send data to the server, it was still built with this in mind by automatically providing the form data to you for the elements inside of a section in the `validation.passed`. You can also get this data whenever you like using the `getFormData` method by passing in the parent section - by default it will get the form data of all validation sections if no argument is provided (and if no validation sections can be found, it will get the data for all form elements on the page).
@@ -150,7 +168,7 @@ The built in validation rules are as follows:
 - **aliases:** isdigits
 
 #### checked
-- **behaviour:** at least one checkbox within the group is selected, or the value is not -1 (this is replaced by a 'required' check internally when used on a radio button or checkbox)
+- **behaviour:** at least one checkbox within the group is selected, or the value is not -1 (this is replaced by a 'required' check internally when used on a radio button or checkbox - 'required' will also be returned in the field's `validation.failed` event, and the 'required' error message will also be used)
 - **aliases:** ischecked
 
 #### unchecked
@@ -205,7 +223,7 @@ The function returns a boolean indicating if your test was successfully added, a
 All currently available rules (including all aliases) are stored in a `rules` array on the `validation` object for reference. This is automatically updated any time a rule is added. So you can also check here to see that your custom rule has been added.
 
 ### debug mode
-By default, the script handles potential errors silently, but you can enable debug mode if necessary (advised for development only) by setting the `debug` property to a truthy value e.g. `validation.debug = true;`.
+By default, the script handles potential errors silently, but you can enable debug mode if necessary (advised for development only) by setting the `debug` property to true: `validation.debug = true;`.
 
 Example errors this will highlight that would otherwise be handled silently:
 
