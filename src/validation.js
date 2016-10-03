@@ -926,10 +926,10 @@
                 // toggle remaining needed classes and trigger validation event
                 // use triggerHandler to prevent event bubbling
                 if (result === true) {
-                    $el.triggerHandler('validation.passed');
+                    $el.trigger('validation.field.passed');
                 } else {
                     $el.addClass('validation-failed validation-failed-' + (result.indexOf('!') === 0 ? result.replace('!', 'not-') : result))
-                        .triggerHandler('validation.failed', result);
+                        .trigger('validation.field.failed', result);
                 }
 
                 // if any error messages exist, hide them, and show the correct one if validation failed
@@ -1001,11 +1001,11 @@
                 $elems.each(app.validate.element);
 
                 if ($elems.filter('.validation-failed').length) {
-                    $holder.addClass('validation-failed').triggerHandler('validation.failed', app.getFormData($holder));
+                    $holder.addClass('validation-failed').trigger('validation.section.failed', app.getFormData($holder));
                     return false; // return value, and prevents default action if event object is passed in
                 }
 
-                $holder.removeClass('validation-failed').triggerHandler('validation.passed', app.getFormData($holder));
+                $holder.removeClass('validation-failed').trigger('validation.section.passed', app.getFormData($holder));
                 return true;
             },
 
@@ -1207,9 +1207,11 @@
 
             // bind to validation-trigger elements - use the closest form to allow nested forms
             $form.on('click', '.validation-trigger', function (e) {
-                var $parentForm = $(this).closest('[data-validation="set"]').data('validation-submit-attempted', true);
-                $parentForm.find('[data-validation="set"]').data('validation-submit-attempted', true);
-                app.validate.handle($parentForm);
+                if (!$form.parent().closest('[data-validation="set"]').length) {
+                    var $parentForm = $(this).closest('[data-validation="set"]').data('validation-submit-attempted', true);
+                    $parentForm.find('[data-validation="set"]').data('validation-submit-attempted', true);
+                    app.validate.handle($parentForm);
+                }
             });
 
             // bind individual input change events

@@ -44,23 +44,24 @@ validation.validate(document.getElementsByTagName('input'));
 #### Classnames and jQuery Events
 There are no specific classes added if the validation passes, only if it fails. A generic "validation-failed" class is added to both form elements and sections that fail validation. An additional class is added to the form elements based on the validation rule that failed e.g. "validation-failed-alpha".
 
-Custom jQuery events are triggered on the form elements and sections to indicate if validation has passed or failed via `validation.passed` and `validation.failed` events respectively. When triggered on a section the event is passed the form data within that section as a JavaScript object, and when the `validation.failed` event fires on a form element, it is passed the rule that failed e.g.
+Custom jQuery events are triggered on the form elements and sections to indicate if validation has passed or failed - these events are: `validation.section.passed`, `validation.section.failed`, `validation.field.passed`, and `validation.field.failed`. The section events are passed the form data within that section as a JavaScript object, and when the `validation.field.failed` is passed the rule that failed e.g.
 
 ```js
-$('form').on('validation.passed', function (formData) {
+$('form').on('validation.section.passed', function (formData) {
     // use the formData in some way
 });
-$('input').on('validation.failed', function (failedRule) {
+$('input').on('validation.field.failed', function (failedRule) {
     // use the failed rule in some way
 });
 ```
 
-Things to consider when using the custom events:
+Things to consider:
 
-1. The events do not bubble
-2. When the validation for a section is triggered, the appropriate event fires on the closest parent form section only - it does not fire on any other sections further up the DOM tree, or on any of its descendants (the same principle applies to the "validation-failed" class)
-3. The events will always fire on form elements before they fire on the parent section
-4. After an attempt has been made to submit a section, change events on form elements within that section will trigger the validation for the entire section, including all form elements inside it. This is done to enable certain expected behaviours, such as comparing the values of two fields
+1. The events bubble - so if you are using the section events and have nested sections, it is best to use the event target `e.target` to select the corresponding section.
+2. Although the events bubble, when a section is submitted and fails validation the "validation-failed" class will be applied to the relevant fields and the parent section only - it will not be set on any other sections further up the DOM tree.
+3. The events will always fire on form elements before they fire on the sections
+4. After an attempt has been made to submit a section, change events on form elements within that section will trigger the validation for the entire section, including all form elements inside it. This is done to enable certain expected behaviours, such as comparing the values of two fields.
+5. The built in change events and click event for the "validation-trigger" class are bound as delegated events onto the section to save memory, so be careful not to prevent the bubbling of events on any parent elements of form fields or validation-trigger elements.
 
 #### Error Messages
 Data attributes can also be used to indicate field error messages to be shown/hidden, using the "data-validation" attribute to indicate what validation rule the message relates to, and a "data-validation-for" attribute containing the form element's name to indicate which field the message relates to. The validation script will search for an element using the "name" attribute first, and will search for a matching "id" if one with a matching "name" isn't found. For example, your HTML might look like the following:
@@ -81,7 +82,7 @@ Data attributes can also be used to indicate field error messages to be shown/hi
 You'll need to add some CSS to hide your error messages by default, but the validation script will handle their visibility from there using jQuery's `.show()` and `.hide()` methods.
 
 ### Form Data
-Although the library does not include any built in functionality to send data to the server, it was still built with this in mind by automatically providing the form data to you for the elements inside of a section in its `validation.passed` and `validation.failed` events. You can also get this data whenever you like using the `getFormData` method by passing in the parent section - by default it will get the form data of all validation sections if no argument is provided (and if no validation sections can be found, it will get the data for all form elements on the page).
+Although the library does not include any built in functionality to send data to the server, it was still built with this in mind by automatically providing the form data to you for the elements inside of a section in its `validation.section.passed` and `validation.section.failed` events. You can also get this data whenever you like using the `getFormData` method by passing in the parent section - by default it will get the form data of all validation sections if no argument is provided (and if no validation sections can be found, it will get the data for all form elements on the page).
 
 This returns an object, using the form element names as keys. Deeper object structures are also possible in case your model requires it by using dots or square braces in the name attribute like so:
 
@@ -104,7 +105,7 @@ All values are returned as strings, and are comma separated if there are multipl
 ### Validation Rules
 There are a selection of built in validation rules, as well as the ability to add your own custom rules if necessary. If you are unsure of what values might pass or fail certain rules, there are many examples in `test/tests.js`.
 
-You can also check for the opposite of a rule by including the bang operator (or logical-not operator) before it e.g. '!email'. In this case the rule passed to the `validation.failed` event would be '!email', but the class added to the input would be "validation-failed-not-email". You should also note that if you do this for the 'required' rule, this is treated as the field being optional, rather than needing to be empty.
+You can also check for the opposite of a rule by including the bang operator (or logical-not operator) before it e.g. '!email'. In this case the rule passed to the `validation.field.failed` event would be '!email', but the class added to the input would be "validation-failed-not-email". You should also note that if you do this for the 'required' rule, this is treated as the field being optional, rather than needing to be empty.
 
 The built in validation rules are as follows:
 
@@ -168,7 +169,7 @@ The built in validation rules are as follows:
 - **aliases:** isdigits
 
 #### checked
-- **behaviour:** at least one checkbox within the group is selected, or the value is not -1 (this is replaced by a 'required' check internally when used on a radio button or checkbox - 'required' will also be returned in the field's `validation.failed` event, and the 'required' error message will also be used)
+- **behaviour:** at least one checkbox within the group is selected, or the value is not -1 (this is replaced by a 'required' check internally when used on a radio button or checkbox - 'required' will also be returned in the field's `validation.field.failed` event, and the 'required' error message will also be used)
 - **aliases:** ischecked
 
 #### unchecked
