@@ -81,7 +81,7 @@ Data attributes can also be used to indicate field error messages to be shown/hi
 You'll need to add some CSS to hide your error messages by default, but the validation script will handle their visibility from there using jQuery's `.show()` and `.hide()` methods.
 
 ### Form Data
-Although the library does not include any built in functionality to send data to the server, it was still built with this in mind by automatically providing the form data to you for the elements inside of a section in the `validation.passed`. You can also get this data whenever you like using the `getFormData` method by passing in the parent section - by default it will get the form data of all validation sections if no argument is provided (and if no validation sections can be found, it will get the data for all form elements on the page).
+Although the library does not include any built in functionality to send data to the server, it was still built with this in mind by automatically providing the form data to you for the elements inside of a section in its `validation.passed` and `validation.failed` events. You can also get this data whenever you like using the `getFormData` method by passing in the parent section - by default it will get the form data of all validation sections if no argument is provided (and if no validation sections can be found, it will get the data for all form elements on the page).
 
 This returns an object, using the form element names as keys. Deeper object structures are also possible in case your model requires it by using dots or square braces in the name attribute like so:
 
@@ -104,7 +104,7 @@ All values are returned as strings, and are comma separated if there are multipl
 ### Validation Rules
 There are a selection of built in validation rules, as well as the ability to add your own custom rules if necessary. If you are unsure of what values might pass or fail certain rules, there are many examples in `test/tests.js`.
 
-You can also check for the opposite of a rule by including the bang operator (or logical-not operator) before it e.g. '!email'. In this case the rule passed to the function bound to the `validation.failed` event would be '!email', but the class added to the input would be "validation-failed-not-email". You should also note that if you do this for the 'required' rule, this is treated as the field being optional (rather than needing to be empty).
+You can also check for the opposite of a rule by including the bang operator (or logical-not operator) before it e.g. '!email'. In this case the rule passed to the `validation.failed` event would be '!email', but the class added to the input would be "validation-failed-not-email". You should also note that if you do this for the 'required' rule, this is treated as the field being optional, rather than needing to be empty.
 
 The built in validation rules are as follows:
 
