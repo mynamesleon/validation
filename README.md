@@ -1,5 +1,5 @@
 # validation
-A simple client side validation library that both does and doesn't interfere.
+A simple jQuery dependent client side validation library that both does and doesn't interfere.
 
 It doesn't attach itself to input change events or form submit events, nor does it manipulate the DOM for you by automatically displaying errors or setting classnames... unless you want it to...
 
