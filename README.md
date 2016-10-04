@@ -44,7 +44,7 @@ validation.validate(document.getElementsByTagName('input'));
 #### Classnames and jQuery Events
 There are no specific classes added if the validation passes, only if it fails. A generic "validation-failed" class is added to both form elements and sections that fail validation. An additional class is added to the form elements based on the validation rule that failed e.g. "validation-failed-alpha".
 
-Custom jQuery events are triggered on the form elements and sections to indicate if validation has passed or failed - these events are: `validation.section.passed`, `validation.section.failed`, `validation.field.passed`, and `validation.field.failed`. The section events are passed the form data within that section as a JavaScript object, and when the `validation.field.failed` is passed the rule that failed e.g.
+Custom jQuery events are triggered on the form elements and sections to indicate if validation has passed or failed - these events are: `validation.section.passed`, `validation.section.failed`, `validation.field.passed`, and `validation.field.failed`. The section events are passed the form data within that section as a JavaScript object, and the `validation.field.failed` event is passed the rule that failed e.g.
 
 ```js
 $('form').on('validation.section.passed', function (formData) {
@@ -59,9 +59,9 @@ Things to consider:
 
 1. The events bubble - so if you are using the section events and have nested sections, it is best to use the event target `e.target` to select the corresponding section.
 2. Although the events bubble, when a section is submitted and fails validation the "validation-failed" class will be applied to the relevant fields and the parent section only - it will not be set on any other sections further up the DOM tree.
-3. The events will always fire on form elements before they fire on the sections
-4. After an attempt has been made to submit a section, change events on form elements within that section will trigger the validation for the entire section, including all form elements inside it. This is done to enable certain expected behaviours, such as comparing the values of two fields.
-5. The built in change events and click event for the "validation-trigger" class are bound as delegated events onto the section to save memory, so be careful not to prevent the bubbling of events on any parent elements of form fields or validation-trigger elements.
+3. In case they're needed, there are also `validation.passed` and `validation.failed` events that are triggered on the fields and sections - these events do not bubble.
+4. The events will always fire on form elements before they fire on the sections
+5. The built in change events and the click event for the "validation-trigger" class are bound as delegated events onto the section to save memory, so be careful not to prevent the bubbling of change or click events on any parent elements of form fields or validation-trigger elements.
 
 #### Error Messages
 Data attributes can also be used to indicate field error messages to be shown/hidden, using the "data-validation" attribute to indicate what validation rule the message relates to, and a "data-validation-for" attribute containing the form element's name to indicate which field the message relates to. The validation script will search for an element using the "name" attribute first, and will search for a matching "id" if one with a matching "name" isn't found. For example, your HTML might look like the following:
@@ -69,7 +69,7 @@ Data attributes can also be used to indicate field error messages to be shown/hi
 ```html
 <div class="form-group">
     <div class="field">
-        <input type="text" name="description" data-validation="required minwords:100 maxwords:200" class="form-control" />
+        <textarea name="description" data-validation="required minwords:100 maxwords:200" class="form-control"></textarea>
     </div>
     <div class="errors">
         <div data-validation-for="description" data-validation="required" class="alert alert-danger">This field is required</div>
@@ -79,7 +79,7 @@ Data attributes can also be used to indicate field error messages to be shown/hi
 </div>
 ```
 
-You'll need to add some CSS to hide your error messages by default, but the validation script will handle their visibility from there using jQuery's `.show()` and `.hide()` methods.
+You'll need to add some CSS to hide the error messages by default, but the validation script will handle their visibility from there using jQuery's `.show()` and `.hide()` methods.
 
 ### Form Data
 Although the library does not include any built in functionality to send data to the server, it was still built with this in mind by automatically providing the form data to you for the elements inside of a section in its `validation.section.passed` and `validation.section.failed` events. You can also get this data whenever you like using the `getFormData` method by passing in the parent section - by default it will get the form data of all validation sections if no argument is provided (and if no validation sections can be found, it will get the data for all form elements on the page).

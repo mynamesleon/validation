@@ -333,6 +333,7 @@
             confirm: {
                 validate: function (val, selector) {
                     var a = [],
+                        $element = $(this),
                         $current,
                         length,
                         func,
@@ -387,10 +388,25 @@
                                 }
                             }
                         }
-                        return val === (typeof $current === 'object' ? $current.val() : $current);
+
+                        if (typeof $current !== 'object') {
+                            app.error('confirm rule: Your selector must return an element');
+                            return false;
+                        }
                     }
 
-                    return val === $(selector).val();
+                    if (typeof $current === 'undefined') {
+                        $current = $(selector);
+                    }
+
+                    // trigger validation on this element on change event for the selector
+                    if ($current.data('validation-confirm-change-bound') !== true) {
+                        $current.data('validation-confirm-change-bound', true).on('change', function () {
+                            app.validate.element.call($element);
+                        });
+                    }
+
+                    return val === $current.val();
                 }
             },
 
@@ -432,6 +448,8 @@
                 validate: function (val, iso) {
                     if (iso === 'iso') {
                         return rules.date.isoregex.test(val);
+                    } else if (!!iso) {
+                        app.error('date validation rule: the specified type \'' + iso + '\' is not checkable');
                     }
                     return !rules.date.regex.test(new Date(val).toString());
                 }
@@ -926,10 +944,10 @@
                 // toggle remaining needed classes and trigger validation event
                 // use triggerHandler to prevent event bubbling
                 if (result === true) {
-                    $el.trigger('validation.field.passed');
+                    $el.trigger('validation.field.passed').triggerHandler('validation.passed');
                 } else {
                     $el.addClass('validation-failed validation-failed-' + (result.indexOf('!') === 0 ? result.replace('!', 'not-') : result))
-                        .trigger('validation.field.failed', result);
+                        .trigger('validation.field.failed', result).triggerHandler('validation.failed', result);
                 }
 
                 // if any error messages exist, hide them, and show the correct one if validation failed
@@ -979,7 +997,7 @@
                         }
                     }
                 });
-                return result.join(' ').replace(/!required|!isrequired/g, '');
+                return $.trim((' ' + result.join(' ') + ' ').replace(/ !required | !isrequired /g, ' '));
             }
 
         },
@@ -996,16 +1014,22 @@
              */
             all: function (e) {
                 var $holder = $(this),
+                    data = app.getFormData($holder),
                     $elems = $holder.find('input[data-validation], select[data-validation], textarea[data-validation]');
 
                 $elems.each(app.validate.element);
 
                 if ($elems.filter('.validation-failed').length) {
-                    $holder.addClass('validation-failed').trigger('validation.section.failed', app.getFormData($holder));
-                    return false; // return value, and prevents default action if event object is passed in
+                    $holder.addClass('validation-failed').trigger('validation.section.failed', data)
+                        .triggerHandler('validation.failed', data);
+
+                    // return value, and prevents default action if event object is passed in
+                    return false;
                 }
 
-                $holder.removeClass('validation-failed').trigger('validation.section.passed', app.getFormData($holder));
+                $holder.removeClass('validation-failed').trigger('validation.section.passed', data)
+                    .triggerHandler('validation.passed', data);
+
                 return true;
             },
 
@@ -1089,10 +1113,9 @@
 
             /**
              * validate an individual element
-             * @param e {object}: event object
              * @return {string|boolean}: returns the first failed rule, or true if validation has passed
              */
-            element: function (e) {
+            element: function () {
                 var $el = $(this),
                     value = app.element.getValue($el),
                     isCheckable = app.element.isCheckable($el),
@@ -1199,8 +1222,6 @@
             // bind full submit handling to the form submit event if using a normal form
             if (this.nodeName === 'FORM') {
                 $form.on('submit', function (e) {
-                    $form.find('[data-validation="set"]').add($form)
-                        .data('validation-submit-attempted', true);
                     return app.validate.handle(this);
                 });
             }
@@ -1208,9 +1229,7 @@
             // bind to validation-trigger elements - use the closest form to allow nested forms
             $form.on('click', '.validation-trigger', function (e) {
                 if (!$form.parent().closest('[data-validation="set"]').length) {
-                    var $parentForm = $(this).closest('[data-validation="set"]').data('validation-submit-attempted', true);
-                    $parentForm.find('[data-validation="set"]').data('validation-submit-attempted', true);
-                    app.validate.handle($parentForm);
+                    app.validate.handle($(this).closest('[data-validation="set"]'));
                 }
             });
 
@@ -1225,11 +1244,7 @@
                         : typeof $(this).data('validation') === 'undefined');
 
                 if (!prevent) {
-                    if ($(this).closest('[data-validation="set"]').data('validation-submit-attempted') === true) {
-                        app.validate.handle($(this).closest('[data-validation="set"]'));
-                    } else {
-                        app.validate.handle(this);
-                    }
+                    app.validate.handle(this);
                 }
             });
         },
