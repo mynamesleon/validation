@@ -359,7 +359,6 @@ describe('For the main rules it...', function () {
         $validForm.append($input); // it must exist on the page
         expect(validation.validate('value in here', 'confirm:#' + id)).to.equal(true);
         expect(validation.validate('value in here', 'confirm:$("#' + id + '")')).to.equal(true);
-        expect(validation.validate('value in here', 'confirm:$("#' + id + '").val()')).to.equal(true);
 
         expect(validation.validate('value in here', 'confirm:#does-not-exist')).to.equal('confirm');
         expect(validation.validate('value in here', 'confirm:$("#does-not-exist")')).to.equal('confirm');

@@ -1091,7 +1091,7 @@
              * cycle through all rules for an element
              * @param $el {jQuery object}
              * @param rulesArr {array}: array of rule strings
-             * @aram value {string}: element value
+             * @param value {string}: element value
              * @param checkRequired {boolean}: internal only
              * @return {boolean|string}: a string containing the failed rule, or true if validation passed
              */
