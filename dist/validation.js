@@ -24,8 +24,6 @@
 }(this, function (root, $) {
     'use strict';
 
-    // todo: add tests for cardtype
-
     var app = {},
 
         /**
