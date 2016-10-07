@@ -210,7 +210,7 @@ This can also accept basic jQuery function syntax, where `$(this)` will select t
 - **aliases:** iscreditcard
 
 #### cardtype
-- **behaviour:** check value matches pattern of various credit/debit card types - checks prefixes and length of card number. Intended to be used in conjunction with 'creditcard' rule. Can also specify which card type(s) to allow e.g. 'cardtype:amex:visa:maestro:mastercard'
+- **behaviour:** check value matches pattern of various credit/debit card types - checks prefixes and length of card number. Intended to be used to complement the 'creditcard' rule. Can also specify which card type(s) to allow e.g. 'cardtype:amex:visa:maestro:mastercard'
 - available types: 'amex', 'dankort', 'dinersclub', 'dinersclubus', 'discover', 'elo', 'forbrugsforeningen', 'jcb', 'instapayment', 'interpayment', 'laser', 'maestro', 'mastercard', 'nspk', 'solo', 'switch', 'uatp', 'unionpay', 'visa', 'visaelectron'
 - **aliases:** creditcardtype, iscardtype, creditcardtype
 
@@ -269,4 +269,5 @@ For reference, the global validation object that is exposed is as follows:
 
 ### changelog
 v1.0.0 - initial release
-v1.0.1 - correction
+v1.0.1 - correction to getFormData issue when square braces were included around the first value
+v1.1.0 - added 'cardtype' check to complement 'creditcard' check
