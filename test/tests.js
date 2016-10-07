@@ -388,6 +388,14 @@ describe('For the main rules it...', function () {
             expect(validation.validate(i, rule)).to.equal(rule);
         });
 
+        ['2013-03-25', '2013/03/25'].forEach(function (i) {
+            expect(validation.validate(i, 'date:iso')).to.equal(true);
+        });
+
+        ['03/25/15', '25-03-2015', 'March 5 2045'].forEach(function (i) {
+            expect(validation.validate(i, 'date:iso')).to.equal(rule);
+        });
+
         expect(validation.validate($input.val('2014/76/57'))).to.equal(false);
     });
 
@@ -507,6 +515,70 @@ describe('For the main rules it...', function () {
         ].forEach(function (i) {
             expect(validation.validate(i, rule)).to.equal(true);
         });
+
+        expect(validation.validate('6356565786896346', rule)).to.equal(rule);
+        expect(validation.validate($input.val('6356565786896346'))).to.equal(false);
+    });
+
+    it('should be able to check a debit/credit card number matches a valid card type', function () {
+        var rule = 'cardtype',
+            $input = createInput('text', rule, '371449635398431');
+
+        expect(validation.validate('378282246310005', 'cardtype:amex')).to.equal(true);
+        expect(validation.validate('371449635398431', 'cardtype:amex')).to.equal(true);
+        expect(validation.validate('378734493671000', 'cardtype:amex')).to.equal(true);
+        expect(validation.validate('3400-0000-0000-009', 'cardtype:amex')).to.equal(true);
+        expect(validation.validate('3400-0000-0000-009', 'cardtype:discover')).to.equal(rule);
+
+        expect(validation.validate('3000 0000 0000 04', 'cardtype:dinersclub')).to.equal(true);
+        expect(validation.validate('30569309025904', 'cardtype:dinersclub')).to.equal(true);
+        expect(validation.validate('38520000023237', 'cardtype:dinersclub')).to.equal(true);
+        expect(validation.validate('36700102000000', 'cardtype:dinersclub')).to.equal(true);
+        expect(validation.validate('36148900647913', 'cardtype:dinersclub')).to.equal(true);
+        expect(validation.validate('38520000023237', 'cardtype:jcb')).to.equal(rule);
+
+        expect(validation.validate('6011 0000 0000 0004', 'cardtype:discover')).to.equal(true);
+        expect(validation.validate('6011111111111117', 'cardtype:discover')).to.equal(true);
+        expect(validation.validate('6011000990139424', 'cardtype:discover')).to.equal(true);
+        expect(validation.validate('6011000400000000', 'cardtype:amex:discover')).to.equal(true);
+        expect(validation.validate('6011000990139424', 'cardtype:amex:visa')).to.equal(rule);
+
+        expect(validation.validate('3530111333300000', 'cardtype:jcb')).to.equal(true);
+        expect(validation.validate('3566002020360505', 'cardtype:jcb')).to.equal(true);
+        expect(validation.validate('3528000700000000', 'cardtype:jcb')).to.equal(true);
+        expect(validation.validate('3566002020360505', 'cardtype:amex')).to.equal(rule);
+
+        expect(validation.validate('5555555555554444', 'cardtype:mastercard')).to.equal(true);
+        expect(validation.validate('5105105105105100', 'cardtype:mastercard')).to.equal(true);
+        expect(validation.validate('5454545454545454', 'cardtype:mastercard')).to.equal(true);
+        expect(validation.validate('5555555555554444', 'cardtype:dankort')).to.equal(rule);
+
+        expect(validation.validate('6759649826438453', 'cardtype:maestro')).to.equal(true);
+        expect(validation.validate('6759649826438453', 'cardtype:dankort')).to.equal(rule);
+
+        expect(validation.validate('4111111111111111', 'cardtype:visa')).to.equal(true);
+        expect(validation.validate('4012888888881881', 'cardtype:visa')).to.equal(true);
+        expect(validation.validate('4222222222222', 'cardtype:visa')).to.equal(true);
+        expect(validation.validate('4444333322221111', 'cardtype:visa')).to.equal(true);
+        expect(validation.validate('4911830000000', 'cardtype:visa')).to.equal(true);
+        expect(validation.validate('4917610000000000', 'cardtype:visa')).to.equal(true);
+        expect(validation.validate('4462030000000000', 'cardtype:visa')).to.equal(true);
+        expect(validation.validate('4917610000000000003', 'cardtype:visa')).to.equal(true);
+        expect(validation.validate('4917610000000000003', 'cardtype:maestro')).to.equal(rule);
+
+        expect(validation.validate('4917300800000000', 'cardtype:visaelectron')).to.equal(true);
+        expect(validation.validate('4917300800000000', 'cardtype:mastercard')).to.equal(rule);
+
+        expect(validation.validate('5019717010103742', 'cardtype:dankort')).to.equal(true);
+        expect(validation.validate('5019717010103742', 'cardtype:jcb')).to.equal(rule);
+
+        expect(validation.validate('6331101999990016', 'cardtype:switch')).to.equal(true);
+        expect(validation.validate('6331101999990016', 'cardtype:dankort')).to.equal(rule);
+
+        expect(validation.validate('630495060000000000', 'cardtype:laser')).to.equal(true);
+        expect(validation.validate('630490017740292441', 'cardtype:laser')).to.equal(true);
+
+        expect(validation.validate($input)).to.equal(true);
 
         expect(validation.validate('6356565786896346', rule)).to.equal(rule);
         expect(validation.validate($input.val('6356565786896346'))).to.equal(false);

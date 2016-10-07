@@ -24,6 +24,8 @@
 }(this, function (root, $) {
     'use strict';
 
+    // todo: add tests for cardtype
+
     var app = {},
 
         /**
@@ -589,7 +591,7 @@
                     val = val.replace(rules.creditcard.nonDigits, '');
 
                     // estimated min and max length to allow
-                    if (val.length < 13 || val.length > 19) {
+                    if (val.length < 12 || val.length > 19) {
                         return false;
                     }
 
@@ -606,6 +608,161 @@
                     }
 
                     return (numToCheck % 10) === 0;
+                }
+            },
+
+            /**
+             * check number matches known length(s) and prefix(es) of card types
+             * https://en.wikipedia.org/wiki/Payment_card_number#Issuer_identification_number_.28IIN.29
+             * @param val {string}
+             * @param types {string|array} optional: string or array of card types
+             *      can be comma, hyphen, underscore, pipe, or colon delimited as a string
+             * @return {boolean}
+             */
+            cardtype: {
+                separators: /[\,\-\_\|\:]/g,
+                nonDigits: /\D/g,
+
+                types: [
+                    'amex', 'dankort', 'dinersclub', 'dinersclubus', 'discover', 'elo', 'forbrugsforeningen', 'jcb', 'instapayment',
+                    'interpayment', 'laser', 'maestro', 'mastercard', 'nspk', 'solo', 'switch', 'uatp', 'unionpay', 'visa', 'visaelectron'
+                ],
+
+                cards: {
+                    amex: {
+                        lengths: [15],
+                        prefixes: ['34', '37']
+                    },
+                    dankort: {
+                        lengths: [16],
+                        prefixes: ['5019']
+                    },
+                    dinersclub: {
+                        lengths: [14],
+                        prefixes: ['300', '301', '302', '303', '304', '305', '309', '36', '38', '39']
+                    },
+                    dinersclubus: {
+                        lengths: [16],
+                        prefixes: ['54', '55']
+                    },
+                    discover: {
+                        lengths: [16],
+                        prefixes: [
+                            '6011', '622126', '622127', '622128', '622129', '62213', '62214', '62215', '62216', '62217', '62218',
+                            '62219', '6222', '6223', '6224', '6225', '6226', '6227', '6228', '62290', '62291', '622920', '622921',
+                            '622922', '622923', '622924', '622925', '644', '645', '646', '647', '648', '649', '65'
+                        ]
+                    },
+                    elo: {
+                        lengths: [16],
+                        prefixes: [
+                            '4011', '4312', '4389', '4514', '4573', '4576', '5041', '5066',
+                            '5067', '509', '6277', '6362', '6363', '650', '6516', '6550'
+                        ]
+                    },
+                    forbrugsforeningen: {
+                        lengths: [16],
+                        prefixes: ['600722']
+                    },
+                    instapayment: {
+                        lengths: [16],
+                        prefixes: ['637', '638', '639']
+                    },
+                    interpayment: {
+                        lengths: [16, 17, 18, 19],
+                        prefixes: ['636']
+                    },
+                    jcb: {
+                        lengths: [16],
+                        prefixes: ['3528', '3529', '353', '354', '355', '356', '357', '358']
+                    },
+                    laser: {
+                        lengths: [16, 17, 18, 19],
+                        prefixes: ['6304', '6706', '6771', '6709']
+                    },
+                    maestro: {
+                        lengths: [12, 13, 14, 15, 16, 17, 18, 19],
+                        prefixes: ['5018', '5020', '5038', '5868', '6304', '6759', '6761', '6762', '6763', '6764', '6765', '6766']
+                    },
+                    mastercard: {
+                        lengths: [16],
+                        prefixes: ['51', '52', '53', '54', '55']
+                    },
+                    nspk: {
+                        lengths: [16],
+                        prefixes: ['2200', '2201', '2202', '2203', '2204']
+                    },
+                    solo: {
+                        lengths: [16, 18, 19],
+                        prefixes: ['6334', '6767']
+                    },
+                    'switch': {
+                        lengths: [16, 18, 19],
+                        prefixes: ['4903', '4905', '4911', '4936', '564182', '633110', '6333', '6759']
+                    },
+                    uatp: {
+                        lengths: [15],
+                        prefixes: ['1']
+                    },
+                    unionpay: {
+                        lengths: [16, 17, 18, 19],
+                        prefixes: [
+                            '622126', '622127', '622128', '622129', '62213', '62214', '62215', '62216', '62217',
+                            '62218', '62219', '6222', '6223', '6224', '6225', '6226', '6227', '6228', '62290',
+                            '62291', '622920', '622921', '622922', '622923', '622924', '622925'
+                        ]
+                    },
+                    visa: {
+                        lengths: [13, 16, 19],
+                        prefixes: ['4']
+                    },
+                    visaelectron: {
+                        lengths: [16],
+                        prefixes: ['4026', '417500', '4405', '4508', '4844', '4913', '4917']
+                    }
+                },
+
+                validate: function (val, types) {
+                    var cards = rules.cardtype.cards,
+                        typesLength,
+                        thisType,
+                        prefixes,
+                        i,
+                        j;
+
+                    // remove anything that is not a digit
+                    val = val.replace(rules.cardtype.nonDigits, '');
+
+                    // default to allow all types
+                    types = $.trim(types) || rules.cardtype.types;
+
+                    // if types passed in as a string, replace the possible separators and make array
+                    if (typeof types === 'string') {
+                        types = types.replace(rules.colour.separators, ' ').split(' ');
+                    }
+
+                    typesLength = types.length;
+
+                    // cycle through types
+                    for (i = 0; i < typesLength; i += 1) {
+                        thisType = types[i].toLowerCase();
+                        // if we have expressions for that type, check them
+                        if (typeof cards[thisType] === 'object') {
+                            prefixes = cards[thisType].prefixes;
+                            // cycle through number prefixes for card type
+                            for (j = 0; j < prefixes.length; j += 1) {
+                                // start of value against prefix & check length against available lengths
+                                if (val.substr(0, prefixes[j].length) === prefixes[j] && $.inArray(val.length, cards[thisType].lengths) > -1) {
+                                    return true;
+                                }
+                            }
+                        } else {
+                            app.error('cardtype validation rule: the specified type \'' + thisType + '\' is not checkable');
+                        }
+                    }
+
+                    // return false by default
+                    return false;
                 }
             },
 
@@ -686,7 +843,7 @@
 
                     // cycle through types
                     for (i = 0; i < types.length; i += 1) {
-                        thisType = types[i];
+                        thisType = types[i].toLowerCase();
                         // if we have expressions for that type, check them
                         if (typeof expr[thisType] === 'object') {
                             for (j = 0; j < expr[thisType].length; j += 1) {
@@ -743,8 +900,9 @@
                     j,
                     thisAlias,
                     aliases = [
-                        'required', 'alpha', 'alphanumeric', 'email', 'equalto', 'format', 'pattern', 'number', 'numeric', 'integer',
-                        'digits', 'ip', 'ipaddress', 'checked', 'unchecked', 'mac', 'date', 'url', 'uri', 'creditcard', 'color', 'colour'
+                        'required', 'alpha', 'alphanumeric', 'email', 'equalto', 'format', 'pattern', 'number',
+                        'numeric', 'integer', 'digits', 'ip', 'ipaddress', 'checked', 'unchecked', 'mac',
+                        'date', 'url', 'uri', 'creditcard', 'cardtype', 'creditcardtype', 'color', 'colour'
                     ],
                     length = aliases.length;
 
@@ -753,6 +911,7 @@
                 rules.ip = rules.ipaddress;
                 rules.color = rules.colour;
                 rules.numeric = rules.number;
+                rules.creditcardtype = rules.cardtype;
                 rules.pattern = rules.regexp = rules.regex;
                 rules.equals = rules.equalto = rules.matches = rules.match;
 
@@ -843,6 +1002,9 @@
                 // handle key style naming e.g. primary[secondary][tertiary]
                 if (attr.indexOf('[') > -1 && attr.indexOf(']') > -1) {
                     attr = attr.split('[').join('.').split(']').join('');
+                    if (attr.indexOf('.') === 0) {
+                        attr = attr.replace('.', '');
+                    }
                 }
 
                 // standard case

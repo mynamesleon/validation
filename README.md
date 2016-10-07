@@ -84,11 +84,14 @@ You'll need to add some CSS to hide the error messages by default, but the valid
 ### Form Data
 Although the library does not include any built in functionality to send data to the server, it was still built with this in mind by automatically providing the form data to you for the elements inside of a section in its `validation.section.passed` and `validation.section.failed` events. You can also get this data whenever you like using the `getFormData` method by passing in the parent section - by default it will get the form data of all validation sections if no argument is provided (and if no validation sections can be found, it will get the data for all form elements on the page).
 
-This returns an object, using the form element names as keys. Deeper object structures are also possible in case your model requires it by using dots or square braces in the name attribute like so:
+This returns an object, using the form element names as keys. Deeper object structures are also possible in case your model requires it by using dots or square braces in the name attribute to indicate varying object levels like so:
 
 ```html
 <input type="checkbox" name="checkboxes.group1" />
-<input type="checkbox" name="[checkboxes][group2]" />
+<input type="checkbox" name="checkboxes[group2]" />
+<input type="checkbox" name="[checkboxes][group3]" />
+<input type="radio" name="[radios][childObjectKey][valueKey]" />
+<input type="radio" name="[radios][childObjectKey].valueKey2" />
 ```
 
 All values are returned as strings, and are comma separated if there are multiple values, such as for a multiselect or checkbox group. For example, the resulting object from calling `validation.getFormData()` for our checkboxes above might include the following:
@@ -183,7 +186,7 @@ The built in validation rules are as follows:
 #### confirm
 - **behaviour:** check that the value matches the value of another field; useful for 'confirm password' or 'confirm email' fields - must be passed a selector e.g. 'confirm:#an-id', 'confirm:#an-ids>.direct-child', 'confirm:#an-ids{!space}.child'.
 This can also accept basic jQuery function syntax, where `$(this)` will select the current field e.g. 'confirm:$(this).next(".field").find("input")'
-- **note:** remember to escape strings as necessary
+- **note:** remember to escape strings as necessary and use {!space} to indicate spaces
 
 #### regex
 - **behaviour:** check the value against a chosen regular expression e.g. 'regex:^[a-zA-Z0-9]*$' - if you need to include flags, you can use the full regex syntax including slashes e.g. 'regex:/\D/g'
@@ -191,11 +194,11 @@ This can also accept basic jQuery function syntax, where `$(this)` will select t
 - **note:** remember to escape strings as necessary and use {!space} to indicate spaces
 
 #### date
-- **behaviour:** must be a valid date string - simply checks the value against the regular expression `/Invalid|NaN/`. Can also check for an ISO date by specifying this after the rule e.g. 'date:iso'
+- **behaviour:** must be a valid date string - this checks if the provided value can be converted into a JavaScript date object. Therefore values such as '2015-02-25', '02/25/2015' and 'March 5 2015' are valid, but it also annoyingly doesn't like the UK date format if the day exceeds 12 e.g. '25/12/2015'. This can also check specifically for an ISO format date (e.g. 2015-05-25) by specifying this after the rule e.g. 'date:iso'
 - **aliases:** isdate
 
 #### url
-- **behaviour:** must be a valid url
+- **behaviour:** must be a valid url - requires a protocol to be included ('ftp://', 'http://', or 'https://')
 - **aliases:** uri, isurl, isuri
 
 #### ipaddress
@@ -203,11 +206,16 @@ This can also accept basic jQuery function syntax, where `$(this)` will select t
 - **aliases:** ip, isip, isipaddress
 
 #### creditcard
-- **behaviour:** must be a valid credit card number
+- **behaviour:** must be a valid credit card number - uses an interpretation of Luhn's algorithm.
 - **aliases:** iscreditcard
 
+#### cardtype
+- **behaviour:** check value matches pattern of various credit/debit card types - checks prefixes and length of card number. Intended to be used in conjunction with 'creditcard' rule. Can also specify which card type(s) to allow e.g. 'cardtype:amex:visa:maestro:mastercard'
+- available types: 'amex', 'dankort', 'dinersclub', 'dinersclubus', 'discover', 'elo', 'forbrugsforeningen', 'jcb', 'instapayment', 'interpayment', 'laser', 'maestro', 'mastercard', 'nspk', 'solo', 'switch', 'uatp', 'unionpay', 'visa', 'visaelectron'
+- **aliases:** creditcardtype, iscardtype, creditcardtype
+
 #### colour
-- **behaviour:** must be a valid colour string - allows keywords, hex, hsl, hsla, rgb, and rgba strings by default. Can also specify which type of colours strings to allow e.g. 'colour:hex:rgb:keywords'
+- **behaviour:** must be a valid colour string - allows keywords, hex, hsl, hsla, rgb, and rgba strings by default. Can also specify which type of colour strings to allow e.g. 'colour:hex:rgb:keywords'
 - **aliases:** color, iscolor, iscolour
 
 ### Custom validation tests
@@ -258,3 +266,7 @@ For reference, the global validation object that is exposed is as follows:
     validate: function (value, rules) {}
 }
 ```
+
+### changelog
+v1.0.0 - initial release
+v1.0.1 - correction
